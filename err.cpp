@@ -13,7 +13,7 @@ bool err::get_errno_message(std::string &out, int errnum) {
 #if _WIN32
 #if HAVE__WCSERROR_S
     wchar_t buf[512];
-    if(!_wcserror_s(buf, errnum)) {
+    if(!_wcserror_s(buf, 512, errnum)) {
         std::wstring ws(buf);
         if(wchar_util::wstr_to_str(out, ws, CP_UTF8)) return true;
     }
@@ -26,7 +26,7 @@ bool err::get_errno_message(std::string &out, int errnum) {
 #endif
 #if HAVE_STRERROR_S
     char nbuf[1024];
-    if (!strerror_s(nbuf, errnum)) {
+    if (!strerror_s(nbuf, 1024, errnum)) {
         out = nbuf;
         return true;
     }
