@@ -34,6 +34,7 @@ set(SOURCE_FILE
     wchar_util.cpp
     memfile.c
     cmath.c
+    time_util.cpp
 )
 set(SOURCE_FILE_HEADERS
     cfileop.h
@@ -45,6 +46,7 @@ set(SOURCE_FILE_HEADERS
     wchar_util.h
     memfile.h
     cmath.h
+    time_util.h
 )
 
 add_library(utils STATIC ${SOURCE_FILE} ${SOURCE_FILE_HEADERS})

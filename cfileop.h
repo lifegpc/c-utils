@@ -4,6 +4,10 @@
 extern "C" {
 #endif
 #include <stddef.h>
+#include <time.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <fcntl.h>
 /**
  * @brief Check file exists
  * @param fn File name
@@ -53,6 +57,53 @@ int fileop_parse_size(const char* size, size_t* fs, int is_byte);
  * @return errno
 */
 int fileop_open(const char* fn, int* fd, int oflag, int shflag, int pmode);
+/**
+ * @brief Check if path is absoulte path.
+ * @param path The path.
+ * @return 1 if path is absoulte path otherwise 0
+*/
+int fileop_isabs(const char* path);
+/**
+ * @brief Join two more pathname components
+ * @param path 
+ * @param path2 
+ * @return Result. Need free memory by using free.
+*/
+char* fileop_join(const char* path, const char* path2);
+/**
+ * @brief check if path is an existing directory.
+ * @param path Path
+ * @param result 1 if path is an existing directory otherwise 0
+ * @return 0 if error occured otherwise 1
+*/
+int fileop_isdir(const char* path, int* result);
+/**
+ * @brief Creates a new directory.
+ * @param path Path for a new directory.
+ * @param mode Directory permission. (Linux only)
+ * @return 1 if created successfully otherwise 0
+*/
+int fileop_mkdir(const char* path, int mode);
+/**
+ * @brief Sets the date and time that the specified file or directory was created, last accessed, or last modified.
+ * @param path The path of directory or file
+ * @param ctime creation date (Windows Only)
+ * @param actime Last access date
+ * @param modtime Last modification date
+ * @return 1 if successed otherwise 0.
+*/
+int fileop_set_file_time(const char* path, time_t ctime, time_t actime, time_t modtime);
+#if _WIN32
+#define fileop_fdopen _fdopen
+#else
+#define fileop_fdopen fdopen
+#endif
+#if _WIN32
+#define fileop_close(fd) (!_close(fd))
+#else
+#define fileop_close(fd) (!close(fd))
+#endif
+#define fileop_fclose(stream) (!fclose(stream))
 #ifdef __cplusplus
 }
 #endif

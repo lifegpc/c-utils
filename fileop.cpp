@@ -4,16 +4,22 @@
 
 #include "fileop.h"
 
+#include <sys/types.h>
+#include <sys/stat.h>
 #ifdef _WIN32
 #include <Windows.h>
 #include <io.h>
+#include <direct.h>
+#include <fileapi.h>
 #else
 #include <unistd.h>
-#include <sys/stat.h>
+#include <utime.h>
 #endif
 #include <fcntl.h>
+#include <ctype.h>
 #include "err.h"
 #include "wchar_util.h"
+#include "time_util.h"
 #include <regex>
 
 #ifdef _WIN32
@@ -52,12 +58,29 @@ int open_internal(wchar_t* fn, int* fd, int oflag, int shflag, int pmode) {
     return _wsopen_s(fd, fn, oflag, shflag, pmode);
 }
 
+bool isdir_internal(wchar_t* fn, bool& result) {
+    struct __stat64 stats;
+    if (_wstat64(fn, &stats)) {
+        return false;
+    }
+    result = stats.st_mode & S_IFDIR;
+    return true;
+}
+
+bool mkdir_internal(wchar_t* fn) {
+    return !_wmkdir(fn);
+}
+
+HANDLE set_file_time_internal(wchar_t* fn) {
+    return CreateFileW(fn, FILE_WRITE_ATTRIBUTES, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+}
+
 template <typename T, typename ... Args>
 T fileop_internal(const char* fname, UINT codePage, T(*callback)(wchar_t* fn, Args... args), T failed, Args... args) {
     int wlen;
     wchar_t* fn;
     DWORD opt = wchar_util::getMultiByteToWideCharOptions(MB_ERR_INVALID_CHARS, codePage);
-    wlen = MultiByteToWideChar(codePage, opt, fname, -1, NULL, 0);
+    wlen = MultiByteToWideChar(codePage, opt, fname, -1, nullptr, 0);
     if (!wlen) return failed;
     fn = (wchar_t*)malloc(sizeof(wchar_t) * wlen);
     if (!MultiByteToWideChar(codePage, opt, fname, -1, fn, wlen)) {
@@ -202,4 +225,125 @@ int fileop::open(std::string fn, int& fd, int oflag, int shflag, int pmode) {
     fd = ::open(fn.c_str(), oflag);
     return fd == -1 ? errno : 0;
 #endif
+}
+
+bool fileop::isabs(std::string path) {
+    if (!path.length()) return false;
+#if _WIN32
+    if (path.length() <= 2) return false;
+    if (isalpha(path[0]) && path[1] == ':' && (path[2] == '/' || path[2] == '\\')) return true; else return false;
+#else
+    return path[0] == '/' ? true : false;
+#endif
+}
+
+std::string fileop::join(std::string path, std::string path2) {
+    auto l1 = path.length(), l2 = path2.length();
+    if (!l1) return path2;
+    if (!l2) return path;
+    if (isabs(path2)) return path2;
+#if _WIN32
+    if (l2 >= 2 && isalpha(path2[0]) && path2[1] == ':') return path2;
+    if (l1 >= 2 && isalpha(path[0]) && path[1] == ':') {
+        if (path2[0] == '/' || path2[0] == '\\') return path.substr(0, 2) + path2;
+        return (path[l1 - 1] == '/' || path[l1 - 1] == '\\') ? path + path2 : path + "\\" + path2;
+    }
+    if (path2[0] == '/' || path2[0] == '\\') return path2;
+    return (path[l1 - 1] == '/' || path[l1 - 1] == '\\') ? path + path2 : path + "\\" + path2;
+#else
+    return path[l1 - 1] == '/' ? path + path2 : path + "/" + path2;
+#endif
+}
+
+bool fileop::isdir(std::string path, bool& result) {
+    if (!exists(path)) {
+        result = false;
+        return true;
+    }
+#if _WIN32
+    UINT cp[] = { CP_UTF8, CP_OEMCP, CP_ACP };
+    int i;
+    for (i = 0; i < 3; i++) {
+        if (fileop_internal<bool, bool&>(path.c_str(), cp[i], &isdir_internal, false, result)) return true;
+    }
+    struct __stat64 stats;
+    if (_stat64(path.c_str(), &stats)) {
+#else
+    struct stat stats;
+    if (stat(path.c_str(), &stats)) {
+#endif
+        return false;
+    }
+    result = stats.st_mode & S_IFDIR;
+    return true;
+}
+
+#if _WIN32
+bool fileop::isdrive(std::string path) {
+    auto l = path.length();
+    if (l == 2 && isalpha(path[0]) && path[1] == ':') return true;
+    if (l == 3 && isalpha(path[0]) && path[1] == ':' && (path[2] == '/' || path[2] == '\\')) return true;
+    return false;
+}
+#endif
+
+bool fileop::mkdir(std::string path, int mode) {
+#if _WIN32
+    UINT cp[] = { CP_UTF8, CP_OEMCP, CP_ACP };
+    int i;
+    for (i = 0; i < 3; i++) {
+        if (fileop_internal(path.c_str(), cp[i], &mkdir_internal, false)) return true;
+    }
+    return !::_mkdir(path.c_str());
+#else
+    return !::mkdir(path.c_str(), mode);
+#endif
+}
+
+bool fileop::set_file_time(std::string path, time_t ctime, time_t actime, time_t modtime) {
+#if _WIN32
+    UINT cp[] = { CP_UTF8, CP_OEMCP, CP_ACP };
+    int i;
+    HANDLE file;
+    for (i = 0; i < 3; i++) {
+        if ((file = fileop_internal(path.c_str(), cp[i], &set_file_time_internal, INVALID_HANDLE_VALUE)) != INVALID_HANDLE_VALUE) {
+            break;
+        }
+    }
+    if (file == INVALID_HANDLE_VALUE) {
+        file = CreateFileA(path.c_str(), FILE_WRITE_ATTRIBUTES, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+        if (file == INVALID_HANDLE_VALUE) return false;
+    }
+    FILETIME c, ac, mod;
+    time_util::time_t_to_file_time(ctime, &c);
+    time_util::time_t_to_file_time(actime, &ac);
+    time_util::time_t_to_file_time(modtime, &mod);
+    auto re = SetFileTime(file, &c, &ac, &mod);
+    CloseHandle(file);
+    return re ? true : false;
+#else
+    struct utimbuf t = { actime, modtime };
+    return !utime(path.c_str(), &t);
+#endif
+}
+
+FILE* fileop::fdopen(int fd, std::string mode) {
+#if _WIN32
+    return ::_fdopen(fd, mode.c_str());
+#else
+    return ::fdopen(fd, mode.c_str());
+#endif
+}
+
+bool fileop::close(int fd) {
+#if _WIN32
+    return !::_close(fd);
+#else
+    return !::close(fd);
+#endif
+}
+
+bool fileop::fclose(FILE* f) {
+    if (!f) return false;
+    return !::fclose(f);
 }

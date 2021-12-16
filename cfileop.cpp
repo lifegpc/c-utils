@@ -49,3 +49,33 @@ int fileop_open(const char* fn, int* fd, int oflag, int shflag, int pmode) {
     *fd = tfd;
     return re;
 }
+
+int fileop_isabs(const char* path) {
+    if (!path) return 0;
+    return fileop::isabs(path) ? 1 : 0;
+}
+
+char* fileop_join(const char* path, const char* path2) {
+    if (!path || !path2) return nullptr;
+    auto re = fileop::join(path, path2);
+    char* tmp = nullptr;
+    return cpp2c::string2char(re, tmp) ? tmp : nullptr;
+}
+
+int fileop_isdir(const char* path, int* result) {
+    if (!path || !result) return 0;
+    bool re;
+    auto r = fileop::isdir(path, re);
+    if (r) *result = re ? 1 : 0;
+    return r ? 1 : 0;
+}
+
+int fileop_mkdir(const char* path, int mode) {
+    if (!path) return 0;
+    return fileop::mkdir(path, mode) ? 1 : 0;
+}
+
+int fileop_set_file_time(const char* path, time_t ctime, time_t actime, time_t modtime) {
+    if (!path) return 0;
+    return fileop::set_file_time(path, ctime, actime, modtime) ? 1 : 0;
+}

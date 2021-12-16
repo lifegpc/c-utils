@@ -1,6 +1,8 @@
 #ifndef _UTIL_FILEOP_H
 #define _UTIL_FILEOP_H
 #include <string>
+#include <time.h>
+#include <stdio.h>
 
 namespace fileop {
     /**
@@ -52,5 +54,68 @@ namespace fileop {
      * @return errno
     */
     int open(std::string fn, int& fd, int oflag, int shflag = 0x10, int pmode = 0);
+    /**
+     * @brief Check if path is absoulte path.
+     * @param path The path.
+     * @return 
+    */
+    bool isabs(std::string path);
+    /**
+     * @brief Join two more pathname components
+     * @param path 
+     * @param path2 
+     * @return result
+    */
+    std::string join(std::string path, std::string path2);
+    /**
+     * @brief check if path is an existing directory.
+     * @param path Path
+     * @param result true if path is an existing directory.
+     * @return false if error occured
+    */
+    bool isdir(std::string path, bool& result);
+#if _WIN32
+    /**
+     * @brief Check if a path only contains drive.
+     * @param path Path
+     * @return Result
+    */
+    bool isdrive(std::string path);
+#endif
+    /**
+     * @brief Creates a new directory.
+     * @param path Path for a new directory.
+     * @param mode Directory permission. (Linux only)
+     * @return true if successed.
+    */
+    bool mkdir(std::string path, int mode);
+    /**
+     * @brief Sets the date and time that the specified file or directory was created, last accessed, or last modified.
+     * @param path The path of directory or file
+     * @param ctime creation date (Windows Only)
+     * @param actime Last access date
+     * @param modtime Last modification date
+     * @return true if successed.
+    */
+    bool set_file_time(std::string path, time_t ctime, time_t actime, time_t modtime);
+    /**
+     * @brief Associates a stream with a file that was previously opened.
+     * @param fd File descriptor of the open file.
+     * @param mode Type of file access.
+     * @return A pointer to the open stream.
+    */
+    FILE* fdopen(int fd, std::string mode);
+    /**
+     * @brief Closes a file.
+     * @param fd File descriptor referring to the open file.
+     * @return 
+    */
+    bool close(int fd);
+    /**
+     * @brief Closes a stream
+     * @param f Pointer to FILE structure.
+     * @return true if the stream is successfully closed
+    */
+    bool fclose(FILE* f);
 }
 #endif
