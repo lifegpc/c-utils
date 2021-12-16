@@ -43,6 +43,16 @@ char* fileop_basename(const char* fn);
  * @return 1 if successed otherwise 0
 */
 int fileop_parse_size(const char* size, size_t* fs, int is_byte);
+/**
+ * @brief Opens a file.
+ * @param fn File name.
+ * @param fd file descriptor. -1 if error occured.
+ * @param oflag The kind of operations allowed.
+ * @param shflag The kind of sharing allowed. (Windows Only) 0 will be replace with 0x10.
+ * @param pmode Permission mode. (Windows Only)
+ * @return errno
+*/
+int fileop_open(const char* fn, int* fd, int oflag, int shflag, int pmode);
 #ifdef __cplusplus
 }
 #endif

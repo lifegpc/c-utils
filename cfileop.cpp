@@ -1,6 +1,7 @@
 #include "cfileop.h"
 #include "fileop.h"
 #include "cpp2c.h"
+#include <errno.h>
 
 int fileop_exists(const char* fn) {
     if (!fn) return 0;
@@ -38,4 +39,13 @@ int fileop_parse_size(const char* size, size_t* fs, int is_byte) {
     auto re = fileop::parse_size(size, tmp, is_byte);
     if (re) *fs = tmp;
     return re ? 1 : 0;
+}
+
+int fileop_open(const char* fn, int* fd, int oflag, int shflag, int pmode) {
+    if (!fn || !fd) return EINVAL;
+    int tfd;
+    if (!shflag) shflag = 0x10;
+    int re = fileop::open(fn, tfd, oflag, shflag, pmode);
+    *fd = tfd;
+    return re;
 }

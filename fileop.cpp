@@ -9,7 +9,9 @@
 #include <io.h>
 #else
 #include <unistd.h>
+#include <sys/stat.h>
 #endif
+#include <fcntl.h>
 #include "err.h"
 #include "wchar_util.h"
 #include <regex>
@@ -44,6 +46,10 @@ bool remove_internal(wchar_t* fn, bool print_error) {
         }
     }
     return !ret;
+}
+
+int open_internal(wchar_t* fn, int* fd, int oflag, int shflag, int pmode) {
+    return _wsopen_s(fd, fn, oflag, shflag, pmode);
 }
 
 template <typename T, typename ... Args>
@@ -175,4 +181,25 @@ bool fileop::parse_size(std::string size, size_t& fs, bool is_byte) {
         fs = base * pow;
     }
     return true;
+}
+
+int fileop::open(std::string fn, int& fd, int oflag, int shflag, int pmode) {
+#if _WIN32
+    UINT cp[] = { CP_UTF8, CP_OEMCP, CP_ACP };
+    int i;
+    int tmfd;
+    int err;
+    for (i = 0; i < 3; i++) {
+        if (!fileop_internal(fn.c_str(), cp[i], &open_internal, EINVAL, &tmfd, oflag, shflag, pmode)) {
+            fd = tmfd;
+            return 0;
+        }
+    }
+    err = ::_sopen_s(&tmfd, fn.c_str(), oflag, shflag, pmode);
+    fd = tmfd;
+    return fd == -1 ? err : 0;
+#else
+    fd = ::open(fn.c_str(), oflag);
+    return fd == -1 ? errno : 0;
+#endif
 }

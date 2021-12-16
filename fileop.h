@@ -42,5 +42,15 @@ namespace fileop {
      * @return true if successed.
     */
     bool parse_size(std::string size, size_t& fs, bool is_byte = true);
+    /**
+     * @brief Opens a file.
+     * @param fn File name.
+     * @param fd file descriptor. -1 if error occured.
+     * @param oflag The kind of operations allowed.
+     * @param shflag The kind of sharing allowed. (Windows Only)
+     * @param pmode Permission mode. (Windows Only)
+     * @return errno
+    */
+    int open(std::string fn, int& fd, int oflag, int shflag = 0x10, int pmode = 0);
 }
 #endif
