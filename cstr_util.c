@@ -27,3 +27,18 @@ int cstr_is_integer(const char* str, int allow_sign) {
     }
     return 1;
 }
+
+int cstr_tolowercase(const char* str, size_t input_len, char** output) {
+    if (!str || !output) return 0;
+    if (!input_len) input_len = strlen(str);
+    if (input_len == (size_t)-1) return 0;
+    char* tmp = malloc(input_len + 1);
+    if (!tmp) return 0;
+    size_t i = 0;
+    for (; i < input_len; i++) {
+        tmp[i] = tolower(str[i]);
+    }
+    tmp[input_len] = 0;
+    *output = tmp;
+    return 1;
+}

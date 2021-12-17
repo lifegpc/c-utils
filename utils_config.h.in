@@ -1,4 +1,5 @@
 #pragma once
+#cmakedefine HAVE_ICONV @HAVE_ICONV@
 #cmakedefine HAVE__ACCESS_S @HAVE__ACCESS_S@
 #cmakedefine HAVE__WACCESS_S @HAVE__WACCESS_S@
 #cmakedefine HAVE_STRERROR_S @HAVE_STRERROR_S@

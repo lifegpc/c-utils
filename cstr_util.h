@@ -17,6 +17,14 @@ int cstr_util_copy_str(char** dest, const char* str);
  * @return 1 if is a interger otherwise 0
 */
 int cstr_is_integer(const char* str, int allow_sign);
+/**
+ * @brief Convert string to lowercase
+ * @param str Origin string
+ * @param input_len The length of origin string. If is 0, strlen will be called to calculate length.
+ * @param output Output string. Need free memory by calling free.
+ * @return 1 if successed otherwise 0.
+*/
+int cstr_tolowercase(const char* str, size_t input_len, char** output);
 #ifdef __cplusplus
 }
 #endif

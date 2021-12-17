@@ -5,6 +5,12 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
 
+find_package(Iconv)
+
+if (Iconv_FOUND)
+    set(HAVE_ICONV 1)
+endif()
+
 include(CheckSymbolExists)
 include(TestStrerrorR)
 if (WIN32)
@@ -35,6 +41,8 @@ set(SOURCE_FILE
     memfile.c
     cmath.c
     time_util.cpp
+    encoding.cpp
+    str_util.cpp
 )
 set(SOURCE_FILE_HEADERS
     cfileop.h
@@ -47,7 +55,14 @@ set(SOURCE_FILE_HEADERS
     memfile.h
     cmath.h
     time_util.h
+    encoding.h
+    str_util.h
 )
 
 add_library(utils STATIC ${SOURCE_FILE} ${SOURCE_FILE_HEADERS})
 target_compile_definitions(utils PRIVATE HAVE_UTILS_CONFIG_H)
+if (Iconv_FOUND)
+    if (TARGET Iconv::Iconv)
+        target_link_libraries(utils Iconv::Iconv)
+    endif()
+endif()
