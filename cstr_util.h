@@ -3,6 +3,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#include <stddef.h>
 /**
  * @brief Copy string to another string
  * @param dest The pointer of output string
