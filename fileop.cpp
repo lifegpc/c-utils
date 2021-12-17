@@ -59,8 +59,13 @@ int open_internal(wchar_t* fn, int* fd, int oflag, int shflag, int pmode) {
 }
 
 bool isdir_internal(wchar_t* fn, bool& result) {
+#if __MINGW32__
+    struct _stat stats;
+    if (_wstat(fn, &stats)) {
+#else
     struct __stat64 stats;
     if (_wstat64(fn, &stats)) {
+#endif
         return false;
     }
     result = stats.st_mode & S_IFDIR;
