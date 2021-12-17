@@ -30,7 +30,7 @@ bool encoding::iconv_convert(std::string input, std::string& output, std::string
     size_t buf_left = 0;
     std::string out;
     size_t avail_in = input.length();
-    char* in = (char*)input.c_str();
+    auto in = input.c_str();
     if (!buf) {
         iconv_close(cd);
         return false;
