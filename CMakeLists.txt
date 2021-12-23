@@ -1,11 +1,14 @@
 cmake_minimum_required(VERSION 3.17)
 
+option(ENABLE_ICONV "Use libiconv to convert encoding" ON)
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
-
-find_package(Iconv)
+if (ENABLE_ICONV)
+    find_package(Iconv)
+endif()
 
 if (Iconv_FOUND)
     set(HAVE_ICONV 1)
