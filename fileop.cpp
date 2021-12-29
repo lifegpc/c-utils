@@ -21,6 +21,7 @@
 #include "wchar_util.h"
 #include "time_util.h"
 #include <regex>
+#include <list>
 
 #ifdef _WIN32
 #if HAVE__ACCESS_S
@@ -351,4 +352,39 @@ bool fileop::close(int fd) {
 bool fileop::fclose(FILE* f) {
     if (!f) return false;
     return !::fclose(f);
+}
+
+bool fileop::mkdirs(std::string path, int mode, bool allow_exists) {
+    bool exists;
+    if (!isdir(path, exists)) return false;
+    if (exists) return allow_exists ? true : false;
+    std::string dn;
+#if _WIN32
+    std::string sp = "\\";
+#else
+    std::string sp = "/";
+#endif
+    dn = path;
+    if (!dn.length() || dn == ".") dn = "." + sp;
+    if (!isdir(dn, exists)) return false;
+    if (exists) return allow_exists ? true : false;
+    std::list<std::string> li;
+    li.push_back(dn);
+    do {
+        dn = dirname(dn) + sp;
+        if (dn.length() == 1) {
+            if (li.size() > 0) {
+                auto en = *(li.rbegin());
+                if (en == ("." + sp)) return false;
+            }
+            dn = "." + sp;
+        }
+        if (!isdir(dn, exists)) return false;
+        if (!exists) li.push_back(dn);
+    } while (!exists);
+    auto it = li.rbegin();
+    for (; it != li.rend(); it++) {
+        if (!mkdir(*it, mode)) return false;
+    }
+    return true;
 }

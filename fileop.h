@@ -117,5 +117,13 @@ namespace fileop {
      * @return true if the stream is successfully closed
     */
     bool fclose(FILE* f);
+    /**
+     * @brief Creates a new directory recursively.
+     * @param path Path for a new directory.
+     * @param mode Directory permission. (Linux only)
+     * @param allow_exists If directory is already exists return true rather than false.
+     * @return true if create successfully otherwise false
+    */
+    bool mkdirs(std::string path, int mode, bool allow_exists = false);
 }
 #endif
