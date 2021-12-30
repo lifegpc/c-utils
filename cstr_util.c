@@ -42,3 +42,13 @@ int cstr_tolowercase(const char* str, size_t input_len, char** output) {
     *output = tmp;
     return 1;
 }
+
+uint32_t cstr_read_uint32(const uint8_t* bytes, int big) {
+    if (!bytes) return 0;
+    return big ? (bytes[0] << 24) + (bytes[1] << 16) + (bytes[2] << 8) + bytes[3] : bytes[0] + (bytes[1] << 8) + (bytes[2] << 16) + (bytes[3] << 24);
+}
+
+int32_t cstr_read_int32(const uint8_t* bytes, int big) {
+    if (!bytes) return 0;
+    return cstr_read_uint32(bytes, big);
+}

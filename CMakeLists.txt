@@ -23,6 +23,9 @@ if (WIN32)
     check_symbol_exists(_wcserror_s "string.h" HAVE__WCSERROR_S)
     check_symbol_exists(printf_s "stdio.h" HAVE_PRINTF_S)
     check_symbol_exists(sscanf_s "stdio.h" HAVE_SSCANF_S)
+else()
+    check_symbol_exists(fseeko "stdio.h" HAVE_FSEEKO)
+    check_symbol_exists(fseeko64 "stdio.h" HAVE_FSEEKO64)
 endif()
 check_symbol_exists(strerror_r "string.h" HAVE_STRERROR_R)
 if (HAVE_STRERROR_R)
@@ -60,6 +63,7 @@ set(SOURCE_FILE_HEADERS
     time_util.h
     encoding.h
     str_util.h
+    linked_list.h
 )
 
 add_library(utils STATIC ${SOURCE_FILE} ${SOURCE_FILE_HEADERS})

@@ -81,6 +81,10 @@ HANDLE set_file_time_internal(wchar_t* fn) {
     return CreateFileW(fn, FILE_WRITE_ATTRIBUTES, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
 }
 
+HANDLE get_file_size_internal(wchar_t* fn) {
+    return CreateFileW(fn, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+}
+
 template <typename T, typename ... Args>
 T fileop_internal(const char* fname, UINT codePage, T(*callback)(wchar_t* fn, Args... args), T failed, Args... args) {
     int wlen;
@@ -371,20 +375,68 @@ bool fileop::mkdirs(std::string path, int mode, bool allow_exists) {
     std::list<std::string> li;
     li.push_back(dn);
     do {
-        dn = dirname(dn) + sp;
-        if (dn.length() == 1) {
+        dn = dirname(dn);
+        if (dn.length() == 0) {
             if (li.size() > 0) {
                 auto en = *(li.rbegin());
                 if (en == ("." + sp)) return false;
             }
-            dn = "." + sp;
+            dn = ".";
         }
-        if (!isdir(dn, exists)) return false;
-        if (!exists) li.push_back(dn);
+        if (!isdir(dn + sp, exists)) return false;
+        if (!exists) li.push_back(dn + sp);
     } while (!exists);
     auto it = li.rbegin();
     for (; it != li.rend(); it++) {
         if (!mkdir(*it, mode)) return false;
     }
     return true;
+}
+
+bool fileop::get_file_size(std::string path, size_t& size) {
+    if (!exists(path)) return false;
+#if _WIN32
+    UINT cp[] = { CP_UTF8, CP_OEMCP, CP_ACP };
+    int i;
+    HANDLE file;
+    for (i = 0; i < 3; i++) {
+        if ((file = fileop_internal(path.c_str(), cp[i], &get_file_size_internal, INVALID_HANDLE_VALUE)) != INVALID_HANDLE_VALUE) {
+            break;
+        }
+    }
+    if (file == INVALID_HANDLE_VALUE) {
+        file = CreateFileA(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+        if (file == INVALID_HANDLE_VALUE) return false;
+    }
+    LARGE_INTEGER si;
+    auto re = GetFileSizeEx(file, &si);
+    if (re) size = si.QuadPart;
+    CloseHandle(file);
+    return re ? true : false;
+#else
+    struct stat stats;
+    if (stat(path.c_str(), &stats)) {
+        return false;
+    }
+    size = stats.st_size;
+    return true;
+#endif
+}
+
+int fileop::fseek(FILE* f, int64_t offset, int origin) {
+#if _WIN32
+    return ::_fseeki64(f, offset, origin);
+#else
+#if HAVE_FSEEKO64
+    return ::fseek64(f, offset, origin);
+#elif HAVE_FSEEKO
+    return ::fseeko(f, offset, origin);
+#else
+    return ::fseek(f, offset, origin);
+#endif
+#endif
+}
+
+bool fileop::mkdir_for_file(std::string path, int mode) {
+    return mkdirs(dirname(path), mode, true);
 }

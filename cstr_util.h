@@ -4,6 +4,7 @@
 extern "C" {
 #endif
 #include <stddef.h>
+#include <stdint.h>
 /**
  * @brief Copy string to another string
  * @param dest The pointer of output string
@@ -26,6 +27,20 @@ int cstr_is_integer(const char* str, int allow_sign);
  * @return 1 if successed otherwise 0.
 */
 int cstr_tolowercase(const char* str, size_t input_len, char** output);
+/**
+ * @brief Convert bytes to uint32
+ * @param bytes Bytes (at least 4 bytes)
+ * @param big 0 if little endian otherwise big endian
+ * @return result
+*/
+uint32_t cstr_read_uint32(const uint8_t* bytes, int big);
+/**
+ * @brief Convert bytes to int32
+ * @param bytes Bytes (at least 4 bytes)
+ * @param big 0 if little endian otherwise big endian
+ * @return result
+*/
+int32_t cstr_read_int32(const uint8_t* bytes, int big);
 #ifdef __cplusplus
 }
 #endif

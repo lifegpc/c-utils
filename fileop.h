@@ -2,6 +2,7 @@
 #define _UTIL_FILEOP_H
 #include <string>
 #include <time.h>
+#include <stdint.h>
 #include <stdio.h>
 
 namespace fileop {
@@ -125,5 +126,27 @@ namespace fileop {
      * @return true if create successfully otherwise false
     */
     bool mkdirs(std::string path, int mode, bool allow_exists = false);
+    /**
+     * @brief Retrieves the size of the specified file, in bytes.
+     * @param path The path of file.
+     * @param size Result.
+     * @return true if successed otherwise false
+    */
+    bool get_file_size(std::string path, size_t& size);
+    /**
+     * @brief Moves the file pointer to a specified location.
+     * @param f File
+     * @param offset Number of bytes from origin.
+     * @param origin Initial position.
+     * @return 0 if successed otherwise a nonzero value
+    */
+    int fseek(FILE* f, int64_t offset, int origin);
+    /**
+     * @brief Make sure file's directory is already exists, if not exists, try create it.
+     * @param path File's path
+     * @param mode Directory permission. (Linux only)
+     * @return true if file's directory is exists now.
+    */
+    bool mkdir_for_file(std::string path, int mode);
 }
 #endif
