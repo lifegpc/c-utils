@@ -51,7 +51,7 @@ namespace fileop {
      * @param fd file descriptor. -1 if error occured.
      * @param oflag The kind of operations allowed.
      * @param shflag The kind of sharing allowed. (Windows Only)
-     * @param pmode Permission mode. (Windows Only)
+     * @param pmode Permission mode.
      * @return errno
     */
     int open(std::string fn, int& fd, int oflag, int shflag = 0x10, int pmode = 0);

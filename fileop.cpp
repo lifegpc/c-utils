@@ -232,7 +232,7 @@ int fileop::open(std::string fn, int& fd, int oflag, int shflag, int pmode) {
     fd = tmfd;
     return fd == -1 ? err : 0;
 #else
-    fd = ::open(fn.c_str(), oflag);
+    fd = ::open(fn.c_str(), oflag, pmode);
     return fd == -1 ? errno : 0;
 #endif
 }
