@@ -1,5 +1,6 @@
 #ifndef _UTIL_FILEOP_H
 #define _UTIL_FILEOP_H
+#include <list>
 #include <string>
 #include <time.h>
 #include <stdint.h>
@@ -154,5 +155,13 @@ namespace fileop {
      * @return The current position
     */
     int64_t ftell(FILE* f);
+    /**
+     * @brief List content of a directory.
+     * @param path The path of directory
+     * @param filelist Result
+     * @param ignore_hidden_file Ignore name starts with `.`
+     * @return true if successed.
+    */
+    bool listdir(std::string path, std::list<std::string>& filelist, bool ignore_hidden_file = true);
 }
 #endif

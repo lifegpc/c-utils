@@ -12,12 +12,14 @@
 #include <direct.h>
 #include <fileapi.h>
 #else
+#include <dirent.h>
 #include <unistd.h>
 #include <utime.h>
 #endif
 #include <fcntl.h>
 #include <ctype.h>
 #include "err.h"
+#include "str_util.h"
 #include "wchar_util.h"
 #include "time_util.h"
 #include <regex>
@@ -83,6 +85,29 @@ HANDLE set_file_time_internal(wchar_t* fn) {
 
 HANDLE get_file_size_internal(wchar_t* fn) {
     return CreateFileW(fn, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+}
+
+bool listdir_internal(wchar_t* fn, std::list<std::string>& list, bool ignore_hidden_file) {
+    std::list<std::string> li;
+    WIN32_FIND_DATAW data;
+    HANDLE re = FindFirstFileW(fn, &data);
+    if (re == INVALID_HANDLE_VALUE) return false;
+    std::string tfn;
+    do {
+        if (!wchar_util::wstr_to_str(tfn, data.cFileName, CP_UTF8)) {
+            FindClose(re);
+            return false;
+        }
+        if ((ignore_hidden_file && tfn.find(".") != 0) || (!ignore_hidden_file && tfn != "." && tfn != "..")) li.push_back(tfn);
+        BOOL r = FindNextFileW(re, &data);
+        if (!r) {
+            FindClose(re);
+            if (GetLastError() == ERROR_NO_MORE_FILES) break;
+            return false;
+        }
+    } while (1);
+    list = li;
+    return true;
 }
 
 template <typename T, typename ... Args>
@@ -452,5 +477,56 @@ int64_t fileop::ftell(FILE* f) {
 #else
     return ::ftell(f);
 #endif
+#endif
+}
+
+bool fileop::listdir(std::string path, std::list<std::string>& filelist, bool ignore_hidden_file) {
+#if _WIN32
+    if (!path.length()) path = ".";
+    path = str_util::str_replace(path, "/", "\\");
+    path = join(path, "*");
+    UINT cp[] = { CP_UTF8, CP_OEMCP, CP_ACP };
+    int i;
+    std::list<std::string> li;
+    for (i = 0; i < 3; i++) {
+        if (fileop_internal<bool, std::list<std::string>&, bool>(path.c_str(), cp[i], &listdir_internal, false, li, ignore_hidden_file)) {
+            filelist = li;
+            return true;
+        }
+    }
+    WIN32_FIND_DATAA data;
+    HANDLE re = FindFirstFileA(path.c_str(), &data);
+    if (re == INVALID_HANDLE_VALUE) return false;
+    std::string tfn;
+    do {
+        tfn = data.cFileName;
+        if ((ignore_hidden_file && tfn.find(".") != 0) || (!ignore_hidden_file && tfn != "." && tfn != "..")) li.push_back(tfn);
+        BOOL r = FindNextFileA(re, &data);
+        if (!r) {
+            FindClose(re);
+            if (GetLastError() == ERROR_NO_MORE_FILES) break;
+            return false;
+        }
+    } while (1);
+    filelist = li;
+    return true;
+#else
+    DIR* dir = opendir(path.c_str());
+    if (!dir) return false;
+    struct dirent* d = readdir(dir);
+    std::list<std::string> li;
+    std::string tfn;
+    while (d) {
+        tfn = d->d_name;
+        if ((ignore_hidden_file && tfn.find(".") != 0) || (!ignore_hidden_file && tfn != "." && tfn != "..")) li.push_back(tfn);
+        d = readdir(dir);
+    }
+    if (errno) {
+        closedir(dir);
+        return false;
+    }
+    closedir(dir);
+    filelist = li;
+    return true;
 #endif
 }
