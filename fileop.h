@@ -148,5 +148,11 @@ namespace fileop {
      * @return true if file's directory is exists now.
     */
     bool mkdir_for_file(std::string path, int mode);
+    /**
+     * @brief Gets the current position of a file pointer.
+     * @param f Target FILE structure.
+     * @return The current position
+    */
+    int64_t ftell(FILE* f);
 }
 #endif

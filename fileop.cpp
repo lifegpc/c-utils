@@ -440,3 +440,17 @@ int fileop::fseek(FILE* f, int64_t offset, int origin) {
 bool fileop::mkdir_for_file(std::string path, int mode) {
     return mkdirs(dirname(path), mode, true);
 }
+
+int64_t fileop::ftell(FILE* f) {
+#if _WIN32
+    return ::_ftelli64(f);
+#else
+#if HAVE_FTELLO64
+    return ::ftello64(f);
+#elif HAVE_FTELLO
+    return ::ftello(f);
+#else
+    return ::ftell(f);
+#endif
+#endif
+}
