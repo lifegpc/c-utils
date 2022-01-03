@@ -530,3 +530,8 @@ bool fileop::listdir(std::string path, std::list<std::string>& filelist, bool ig
     return true;
 #endif
 }
+
+std::string fileop::filename(std::string path) {
+    auto loc = path.find_last_of('.');
+    return loc == -1 ? path : path.substr(0, loc);
+}

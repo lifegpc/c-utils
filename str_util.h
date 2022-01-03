@@ -1,5 +1,7 @@
 #ifndef _UTILS_STR_UTIL_H
 #define _UTILS_STR_UTIL_H
+#include <list>
+#include <stddef.h>
 #include <string>
 namespace str_util {
     /**
@@ -17,5 +19,13 @@ namespace str_util {
      * @return Result string
     */
     std::string str_replace(std::string input, std::string pattern, std::string new_content);
+    /**
+     * @brief Split string with pattern.
+     * @param input Input string
+     * @param pattern Partten
+     * @param max Maximum count of result.
+     * @return Result.
+    */
+    std::list<std::string> str_split(std::string input, std::string pattern, size_t max = -1);
 }
 #endif

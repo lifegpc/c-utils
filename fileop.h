@@ -163,5 +163,11 @@ namespace fileop {
      * @return true if successed.
     */
     bool listdir(std::string path, std::list<std::string>& filelist, bool ignore_hidden_file = true);
+    /**
+     * @brief Return a path without file extension
+     * @param path Path
+     * @return Result
+    */
+    std::string filename(std::string path);
 }
 #endif

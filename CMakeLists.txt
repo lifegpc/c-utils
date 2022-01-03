@@ -51,6 +51,7 @@ set(SOURCE_FILE
     time_util.cpp
     encoding.cpp
     str_util.cpp
+    c_linked_list.cpp
 )
 set(SOURCE_FILE_HEADERS
     cfileop.h
@@ -66,6 +67,7 @@ set(SOURCE_FILE_HEADERS
     encoding.h
     str_util.h
     linked_list.h
+    c_linked_list.h
 )
 
 add_library(utils STATIC ${SOURCE_FILE} ${SOURCE_FILE_HEADERS})

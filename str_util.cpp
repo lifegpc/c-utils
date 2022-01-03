@@ -29,3 +29,19 @@ std::string str_util::str_replace(std::string input, std::string pattern, std::s
     }
     return input;
 }
+
+std::list<std::string> str_util::str_split(std::string input, std::string pattern, size_t max) {
+    if (max == 0) return {};
+    std::list<std::string> li;
+    auto loc = input.find(pattern, 0);
+    auto last_loc = 0;
+    auto len = pattern.length();
+    while (loc != -1 && li.size() < max) {
+        li.push_back(input.substr(last_loc, loc - last_loc));
+        last_loc = loc + len;
+        if (last_loc < input.length()) loc = input.find(pattern, max(0, last_loc));
+        else break;
+    }
+    if (last_loc <= input.length()) li.push_back(input.substr(last_loc, input.length() - last_loc));
+    return li;
+}
