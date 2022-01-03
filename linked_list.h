@@ -3,6 +3,7 @@
 #include <list>
 #include <malloc.h>
 #include <stddef.h>
+#include <string.h>
 template <typename T>
 struct LinkedList {
     T d;
