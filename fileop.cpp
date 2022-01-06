@@ -453,7 +453,7 @@ int fileop::fseek(FILE* f, int64_t offset, int origin) {
     return ::_fseeki64(f, offset, origin);
 #else
 #if HAVE_FSEEKO64
-    return ::fseek64(f, offset, origin);
+    return ::fseeko64(f, offset, origin);
 #elif HAVE_FSEEKO
     return ::fseeko(f, offset, origin);
 #else
