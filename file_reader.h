@@ -1,11 +1,15 @@
 #ifndef _UTILS_FILE_READER_H
 #define _UTILS_FILE_READER_H
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #if __cplusplus
 extern "C" {
 #endif
 typedef struct file_reader_file file_reader_file;
+typedef size_t(*file_reader_file_read)(void* f, size_t buf_len, char* buf);
+typedef int(*file_reader_file_seek)(void* f, int64_t offset, int origin);
+typedef int64_t(*file_reader_file_tell)(void* f);
 /**
  * @brief Create a reader from a stream
  * @param f File stream
@@ -13,6 +17,16 @@ typedef struct file_reader_file file_reader_file;
  * @return the reader, NULL if OOM or stream is NULL.
 */
 file_reader_file* create_file_reader(FILE* f, unsigned char endian);
+/**
+ * @brief Create a reader from a custom IO stream
+ * @param f The data to pass to function
+ * @param read The read function. Must not be NULL.
+ * @param seek The seek function. Must not be NULL.
+ * @param tell The tell function. Must not be NULL.
+ * @param endian 0 if little endian otherwise big endian
+ * @return the reader, NULL if OOM or any parameters is NULL.
+*/
+file_reader_file* create_file_reader2(void* f, file_reader_file_read read, file_reader_file_seek seek, file_reader_file_tell tell, unsigned char endian);
 /**
  * @brief Free a reader. This will not close stream.
  * @param f the pointer to reader struct
