@@ -41,6 +41,49 @@ uint32_t cstr_read_uint32(const uint8_t* bytes, int big);
  * @return result
 */
 int32_t cstr_read_int32(const uint8_t* bytes, int big);
+/**
+ * @brief Convert string to lowercase
+ * @param str String needed to convert
+ * @param len The length of the string. If is 0, strlen will be called to calculate length.
+*/
+void cstr_tolowercase2(char* str, size_t len);
+/**
+ * @brief Convert bytes to uint64
+ * @param bytes Bytes (at least 8 bytes)
+ * @param big 0 if little endian otherwise big endian
+ * @return result
+*/
+uint64_t cstr_read_uint64(const uint8_t* bytes, int big);
+/**
+ * @brief Convert bytes to int64
+ * @param bytes Bytes (at least 8 bytes)
+ * @param big 0 if little endian otherwise big endian
+ * @return result
+*/
+int64_t cstr_read_int64(const uint8_t* bytes, int big);
+/**
+ * @brief Convert bytes to uint16
+ * @param bytes Bytes (at least 2 bytes)
+ * @param big 0 if little endian otherwise big endian
+ * @return result
+*/
+uint16_t cstr_read_uint16(const uint8_t* bytes, int big);
+/**
+ * @brief Convert bytes to int16
+ * @param bytes Bytes (at least 2 bytes)
+ * @param big 0 if little endian otherwise big endian
+ * @return result
+*/
+int16_t cstr_read_int16(const uint8_t* bytes, int big);
+/**
+ * @brief Read string from buffer
+ * @param buf Buffer
+ * @param dest Result string
+ * @param pos The start position in buffer. After a successed called, the position will be updated.
+ * @param buf_len The length of buffer
+ * @return 0 if successed otherwise 1
+*/
+int cstr_read_str(char* buf, char** dest, size_t* pos, size_t buf_len);
 #ifdef __cplusplus
 }
 #endif

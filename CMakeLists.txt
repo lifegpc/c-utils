@@ -52,6 +52,7 @@ set(SOURCE_FILE
     encoding.cpp
     str_util.cpp
     c_linked_list.cpp
+    file_reader.c
 )
 set(SOURCE_FILE_HEADERS
     cfileop.h
@@ -68,6 +69,7 @@ set(SOURCE_FILE_HEADERS
     str_util.h
     linked_list.h
     c_linked_list.h
+    file_reader.h
 )
 
 add_library(utils STATIC ${SOURCE_FILE} ${SOURCE_FILE_HEADERS})

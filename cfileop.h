@@ -5,6 +5,7 @@ extern "C" {
 #endif
 #include <stddef.h>
 #include <time.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <fcntl.h>
@@ -104,6 +105,42 @@ int fileop_set_file_time(const char* path, time_t ctime, time_t actime, time_t m
 #define fileop_close(fd) (!close(fd))
 #endif
 #define fileop_fclose(stream) (!fclose(stream))
+/**
+ * @brief Creates a new directory recursively.
+ * @param path Path for a new directory.
+ * @param mode Directory permission. (Linux only)
+ * @param allow_exists If directory is already exists return 1 rather than 0.
+ * @return 1 if create successfully otherwise 0
+*/
+int fileop_mkdirs(const char* path, int mode, int allow_exists);
+/**
+ * @brief Retrieves the size of the specified file, in bytes.
+ * @param path The path of file.
+ * @param size Result.
+ * @return 1 if successed otherwise 0
+*/
+int fileop_get_file_size(const char* path, size_t* size);
+/**
+ * @brief Moves the file pointer to a specified location.
+ * @param f File
+ * @param offset Number of bytes from origin.
+ * @param origin Initial position.
+ * @return 0 if successed otherwise a nonzero value
+*/
+int fileop_fseek(FILE* f, int64_t offset, int origin);
+/**
+ * @brief Make sure file's directory is already exists, if not exists, try create it.
+ * @param path File's path
+ * @param mode Directory permission. (Linux only)
+ * @return 1 if file's directory is exists now otherwise 0.
+*/
+int fileop_mkdir_for_file(const char* path, int mode);
+/**
+ * @brief Gets the current position of a file pointer.
+ * @param f Target FILE structure.
+ * @return The current position
+*/
+int64_t fileop_ftell(FILE* f);
 #ifdef __cplusplus
 }
 #endif

@@ -79,3 +79,29 @@ int fileop_set_file_time(const char* path, time_t ctime, time_t actime, time_t m
     if (!path) return 0;
     return fileop::set_file_time(path, ctime, actime, modtime) ? 1 : 0;
 }
+
+int fileop_mkdirs(const char* path, int mode, int allow_exists) {
+    if (!path) return 0;
+    return fileop::mkdirs(path, mode, allow_exists) ? 1 : 0;
+}
+
+int fileop_get_file_size(const char* path, size_t* size) {
+    if (!path || !size) return 0;
+    size_t s;
+    auto re = fileop::get_file_size(path, s);
+    if (re) *size = s;
+    return re ? 1 : 0;
+}
+
+int fileop_fseek(FILE* f, int64_t offset, int origin) {
+    return fileop::fseek(f, offset, origin);
+}
+
+int fileop_mkdir_for_file(const char* path, int mode) {
+    if (!path) return 0;
+    return fileop::mkdir_for_file(path, mode) ? 1 : 0;
+}
+
+int64_t fileop_ftell(FILE* f) {
+    return fileop::ftell(f);
+}
