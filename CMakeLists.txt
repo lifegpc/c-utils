@@ -58,6 +58,7 @@ set(SOURCE_FILE_HEADERS
     cfileop.h
     cpp2c.h
     cstr_util.h
+    dict.h
     err.h
     fileop.h
     list_pointer.h

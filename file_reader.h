@@ -39,6 +39,27 @@ void free_file_reader(file_reader_file* f);
 */
 void set_file_reader_endian(file_reader_file* f, unsigned char endian);
 /**
+ * @brief Read char from reader
+ * @param f reader
+ * @param re result
+ * @return 0 if successed otherwise 1
+*/
+int file_reader_read_char(file_reader_file* f, char* re);
+/**
+ * @brief Read uint8 from reader
+ * @param f reader
+ * @param re result
+ * @return 0 if successed otherwise 1
+*/
+int file_reader_read_uint8(file_reader_file* f, uint8_t* re);
+/**
+ * @brief Read int16 from reader
+ * @param f reader
+ * @param re result
+ * @return 0 if successed otherwise 1
+*/
+int file_reader_read_int16(file_reader_file* f, int16_t* re);
+/**
  * @brief Read int32 from reader
  * @param f reader
  * @param re result

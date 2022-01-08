@@ -60,6 +60,40 @@ void set_file_reader_endian(file_reader_file* f, unsigned char endian) {
     f->endian = endian;
 }
 
+int file_reader_read_char(file_reader_file* f, char* re) {
+    if (!f) return 1;
+    char buf[1];
+    if (!f->read(f->f, 1, buf)) {
+        return 1;
+    }
+    if (re) *re = buf[0];
+    return 0;
+}
+
+int file_reader_read_uint8(file_reader_file* f, uint8_t* re) {
+    return file_reader_read_char(f, (char*)re);
+}
+
+int file_reader_read_int16(file_reader_file* f, int16_t* re) {
+    if (!f) return 1;
+    int64_t offset = f->tell(f->f);
+    int16_t r = 0;
+    int origin = SEEK_SET;
+    if (offset == -1) {
+        origin = SEEK_CUR;
+    }
+    size_t c;
+    uint8_t buf[2];
+    if ((c = f->read(f->f, 2, buf)) < 2) {
+        if (origin == SEEK_CUR) offset = -c;
+        f->seek(f->f, offset, origin);
+        return 1;
+    }
+    r = cstr_read_int16(buf, f->endian);
+    if (re) *re = r;
+    return 0;
+}
+
 int file_reader_read_int32(file_reader_file* f, int32_t* re) {
     if (!f) return 1;
     int64_t offset = f->tell(f->f);

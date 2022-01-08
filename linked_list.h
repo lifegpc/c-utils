@@ -17,7 +17,7 @@ bool linked_list_append(struct LinkedList<T>*& list, T* data = nullptr, struct L
     struct LinkedList<T>* tmp = (struct LinkedList<T>*)malloc(sizeof(LinkedList<T>));
     if (!tmp) return false;
     memset(tmp, 0, sizeof(LinkedList<T>));
-    if (data) tmp->d = T(*data); else tmp->d = T();
+    if (data) tmp->d = *data; else tmp->d = T();
     if (!have_list) {
         list = tmp;
     } else {
@@ -41,7 +41,7 @@ bool linked_list_append_head(struct LinkedList<T>*& list, T* data = nullptr) {
     struct LinkedList<T>* tmp = (struct LinkedList<T>*)malloc(sizeof(LinkedList<T>));
     if (!tmp) return false;
     memset(tmp, 0, sizeof(LinkedList<T>));
-    if (data) tmp->d = T(*data); else tmp->d = T();
+    if (data) tmp->d = *data; else tmp->d = T();
     if (have_list) {
         tmp->next = list;
         list->prev = tmp;

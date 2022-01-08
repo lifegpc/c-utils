@@ -117,7 +117,7 @@ int cstr_read_str(char* buf, char** dest, size_t* pos, size_t buf_len) {
         tmp[n] = 0;
     }
     *pos = p >= buf_len ? p : p + 1;
-    char* ntmp = realloc(tmp, n);
+    char* ntmp = realloc(tmp, n + 1);
     *dest = ntmp ? ntmp : tmp;
     return 0;
 }
