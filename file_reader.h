@@ -39,6 +39,15 @@ void free_file_reader(file_reader_file* f);
 */
 void set_file_reader_endian(file_reader_file* f, unsigned char endian);
 /**
+ * @brief Aligin the current position
+ * @param f reader
+ * @return 0 if successed otherwise 1
+*/
+int file_reader_align(file_reader_file* f);
+size_t file_reader_read(file_reader_file* f, size_t buf_len, char* buf);
+int file_reader_seek(file_reader_file* f, int64_t offset, int origin);
+int64_t file_reader_tell(file_reader_file* f);
+/**
  * @brief Read char from reader
  * @param f reader
  * @param re result

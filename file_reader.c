@@ -60,6 +60,30 @@ void set_file_reader_endian(file_reader_file* f, unsigned char endian) {
     f->endian = endian;
 }
 
+int file_reader_align(file_reader_file* f) {
+    if (!f) return 1;
+    int64_t ofs = f->tell(f->f);
+    if (ofs == -1) return 1;
+    int64_t nofs = (ofs + 3) & -4;
+    if (f->seek(f->f, nofs - ofs, SEEK_CUR)) return 1;
+    return 0;
+}
+
+size_t file_reader_read(file_reader_file* f, size_t buf_len, char* buf) {
+    if (!f || !buf) return 0;
+    return f->read(f->f, buf_len, buf);
+}
+
+int file_reader_seek(file_reader_file* f, int64_t offset, int origin) {
+    if (!f) return 1;
+    return f->seek(f->f, offset, origin);
+}
+
+int64_t file_reader_tell(file_reader_file* f) {
+    if (!f) return -1;
+    return f->tell(f->f);
+}
+
 int file_reader_read_char(file_reader_file* f, char* re) {
     if (!f) return 1;
     char buf[1];

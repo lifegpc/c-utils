@@ -111,6 +111,49 @@ size_t linked_list_count(struct LinkedList<T>* list) {
 }
 
 template <typename T>
+bool linked_list_delete(struct LinkedList<T>*& list, T data) {
+    if (!list) return false;
+    struct LinkedList<T>* t = list;
+    while (t->prev) {
+        t = t->prev;
+    }
+    if (t->d == data) {
+        if (t->prev) t->prev->next = t->next;
+        if (t->next) t->next->prev = t->prev;
+        if (t == list) {
+            if (t->prev) {
+                list = t->prev;
+            } else if (t->next) {
+                list = t->next;
+            } else {
+                list = nullptr;
+            }
+        }
+        free(t);
+        return true;
+    }
+    while (t->next) {
+        t = t->next;
+        if (t->d == data) {
+            if (t->prev) t->prev->next = t->next;
+            if (t->next) t->next->prev = t->prev;
+            if (t == list) {
+                if (t->prev) {
+                    list = t->prev;
+                } else if (t->next) {
+                    list = t->next;
+                } else {
+                    list = nullptr;
+                }
+            }
+            free(t);
+            return true;
+        }
+    }
+    return false;
+}
+
+template <typename T>
 void linked_list_free_tail(struct LinkedList<T>*& list, void(*free_func)(T) = nullptr) {
     if (!list) return;
     struct LinkedList<T>* t = linked_list_tail(list);
@@ -125,8 +168,64 @@ void linked_list_free_tail(struct LinkedList<T>*& list, void(*free_func)(T) = nu
     }
 }
 
+template <typename T, typename D>
+struct LinkedList<T>* linked_list_get(struct LinkedList<T>* list, D data, bool(*compare_func)(T, D)) {
+    if (!list || !compare_func) return nullptr;
+    struct LinkedList<T>* t = list;
+    while (t->prev) {
+        t = t->prev;
+    }
+    if (compare_func(t->d, data)) return t;
+    while (t->next) {
+        t = t->next;
+        if (compare_func(t->d, data)) return t;
+    }
+    return nullptr;
+}
+
+template <typename T>
+struct LinkedList<T>* linked_list_get(struct LinkedList<T>* list, size_t index) {
+    if (!list) return nullptr;
+    struct LinkedList<T>* t = list;
+    while (t->prev) {
+        t = t->prev;
+    }
+    size_t n = 0;
+    if (index == n) return t;
+    while (t->next) {
+        t = t->next;
+        n++;
+        if (index == n) return t;
+    }
+    return nullptr;
+}
+
+template <typename T>
+bool linked_list_have(struct LinkedList<T>* list, T data) {
+    if (!list) return false;
+    struct LinkedList<T>* t = list;
+    if (t->d == data) return true;
+    while (t->next) {
+        t = t->next;
+        if (t->d == data) return true;
+    }
+    return false;
+}
+
 template <typename T, typename ... Args>
 bool linked_list_have(struct LinkedList<T>* list, T data, bool(*compare_func)(T, T, Args...), Args... args) {
+    if (!list || !compare_func) return false;
+    struct LinkedList<T>* t = list;
+    if (compare_func(t->d, data, args...)) return true;
+    while (t->next) {
+        t = t->next;
+        if (compare_func(t->d, data, args...)) return true;
+    }
+    return false;
+}
+
+template <typename T, typename D, typename ... Args>
+bool linked_list_have(struct LinkedList<T>* list, D data, bool(*compare_func)(T, D, Args...), Args... args) {
     if (!list || !compare_func) return false;
     struct LinkedList<T>* t = list;
     if (compare_func(t->d, data, args...)) return true;
