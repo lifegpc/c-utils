@@ -237,6 +237,29 @@ bool linked_list_have(struct LinkedList<T>* list, D data, bool(*compare_func)(T,
 }
 
 template <typename T>
+struct LinkedList<T>* linked_list_head(struct LinkedList<T>* list) {
+    if (!list) return nullptr;
+    struct LinkedList<T>* t = list;
+    while (t->prev) {
+        t = t->prev;
+    }
+    return t;
+}
+
+template <typename T, typename ... Args>
+void linked_list_iter(struct LinkedList<T>* list, void(*callback)(size_t index, T data, Args... args), Args... args) {
+    if (!list || !callback) return;
+    size_t i = 0;
+    struct LinkedList<T>* t = list;
+    callback(i, t->d, args...);
+    while (t->next) {
+        t = t->next;
+        i++;
+        callback(i, t->d, args...);
+    }
+}
+
+template <typename T>
 void linked_list_remove(struct LinkedList<T>*& node, void(*free_func)(T) = nullptr) {
     if (!node) return;
     if (node->prev) {

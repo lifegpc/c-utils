@@ -45,3 +45,15 @@ std::list<std::string> str_util::str_split(std::string input, std::string patter
     if (last_loc <= input.length()) li.push_back(input.substr(last_loc, input.length() - last_loc));
     return li;
 }
+
+std::string str_util::str_hex(std::string input) {
+    if (input.empty()) return "";
+    const char* t = "0123456789abcdef";
+    std::string output;
+    for (auto i = input.begin(); i != input.end(); i++) {
+        unsigned char c = *i;
+        output += t[c / 16];
+        output += t[c % 16];
+    }
+    return output;
+}

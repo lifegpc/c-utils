@@ -27,5 +27,11 @@ namespace str_util {
      * @return Result.
     */
     std::list<std::string> str_split(std::string input, std::string pattern, size_t max = -1);
+    /**
+     * @brief Convert data to a lowercase hexadecimal string
+     * @param input Input data
+     * @return Output
+    */
+    std::string str_hex(std::string input);
 }
 #endif

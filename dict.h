@@ -38,6 +38,16 @@ template <typename K, typename V>
 bool dict_have_key(struct Dict<K, V>* d, K key) {
     return linked_list_have((struct LinkedList<struct dict_entry<K, V>>*)d, key, &dict_heve_key_internal);
 }
+template <typename K, typename V, typename ... Args>
+void dict_iter(struct Dict<K, V>* d, void(*callback)(K key, V value, Args... args), Args... args) {
+    if (!d || !callback) return;
+    struct Dict<K, V>* t = d;
+    callback(t->d.key, t->d.value, args...);
+    while (t->next) {
+        t = t->next;
+        callback(t->d.key, t->d.value, args...);
+    }
+}
 template <typename K, typename V>
 bool dict_set(struct Dict<K, V>*& d, K key, V value, void(*free_func)(V) = nullptr) {
     if (!d) {
