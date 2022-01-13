@@ -84,6 +84,20 @@ int16_t cstr_read_int16(const uint8_t* bytes, int big);
  * @return 0 if successed otherwise 1
 */
 int cstr_read_str(char* buf, char** dest, size_t* pos, size_t buf_len);
+/**
+ * @brief Convert bytes to float
+ * @param bytes Bytes (at least 4 bytes)
+ * @param big 0 if little endian otherwise big endian
+ * @return result
+*/
+float cstr_read_float(const uint8_t* bytes, int big);
+/**
+ * @brief Convert bytes to double
+ * @param bytes Bytes (at least 8 bytes)
+ * @param big 0 if little endian otherwise big endian
+ * @return result
+*/
+double cstr_read_double(const uint8_t* bytes, int big);
 #ifdef __cplusplus
 }
 #endif

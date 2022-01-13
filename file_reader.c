@@ -94,6 +94,46 @@ int file_reader_read_char(file_reader_file* f, char* re) {
     return 0;
 }
 
+int file_reader_read_double(file_reader_file* f, double* re) {
+    if (!f) return 1;
+    int64_t offset = f->tell(f->f);
+    double r = 0;
+    int origin = SEEK_SET;
+    if (offset == -1) {
+        origin = SEEK_CUR;
+    }
+    size_t c;
+    uint8_t buf[8];
+    if ((c = f->read(f->f, 8, buf)) < 8) {
+        if (origin == SEEK_CUR) offset = -c;
+        f->seek(f->f, offset, origin);
+        return 1;
+    }
+    r = cstr_read_double(buf, f->endian);
+    if (re) *re = r;
+    return 0;
+}
+
+int file_reader_read_float(file_reader_file* f, float* re) {
+    if (!f) return 1;
+    int64_t offset = f->tell(f->f);
+    float r = 0;
+    int origin = SEEK_SET;
+    if (offset == -1) {
+        origin = SEEK_CUR;
+    }
+    size_t c;
+    uint8_t buf[4];
+    if ((c = f->read(f->f, 4, buf)) < 4) {
+        if (origin == SEEK_CUR) offset = -c;
+        f->seek(f->f, offset, origin);
+        return 1;
+    }
+    r = cstr_read_float(buf, f->endian);
+    if (re) *re = r;
+    return 0;
+}
+
 int file_reader_read_uint8(file_reader_file* f, uint8_t* re) {
     return file_reader_read_char(f, (char*)re);
 }
@@ -116,6 +156,10 @@ int file_reader_read_int16(file_reader_file* f, int16_t* re) {
     r = cstr_read_int16(buf, f->endian);
     if (re) *re = r;
     return 0;
+}
+
+int file_reader_read_uint16(file_reader_file* f, uint16_t* re) {
+    return file_reader_read_int16(f, (int16_t*)re);
 }
 
 int file_reader_read_int32(file_reader_file* f, int32_t* re) {

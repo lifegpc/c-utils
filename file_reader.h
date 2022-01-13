@@ -55,6 +55,20 @@ int64_t file_reader_tell(file_reader_file* f);
 */
 int file_reader_read_char(file_reader_file* f, char* re);
 /**
+ * @brief Read double from reader
+ * @param f reader
+ * @param re result
+ * @return 0 if successed otherwise 1
+*/
+int file_reader_read_double(file_reader_file* f, double* re);
+/**
+ * @brief Read float from reader
+ * @param f reader
+ * @param re result
+ * @return 0 if successed otherwise 1
+*/
+int file_reader_read_float(file_reader_file* f, float* re);
+/**
  * @brief Read uint8 from reader
  * @param f reader
  * @param re result
@@ -68,6 +82,13 @@ int file_reader_read_uint8(file_reader_file* f, uint8_t* re);
  * @return 0 if successed otherwise 1
 */
 int file_reader_read_int16(file_reader_file* f, int16_t* re);
+/**
+ * @brief Read uint16 from reader
+ * @param f reader
+ * @param re result
+ * @return 0 if successed otherwise 1
+*/
+int file_reader_read_uint16(file_reader_file* f, uint16_t* re);
 /**
  * @brief Read int32 from reader
  * @param f reader

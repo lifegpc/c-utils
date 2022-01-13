@@ -31,6 +31,12 @@ struct dict_entry<K, V>* dict_get(struct Dict<K, V>* d, K key) {
     return &re->d;
 }
 template <typename K, typename V>
+V dict_get_value(struct Dict<K, V>* d, K key) {
+    struct dict_entry<K, V>* re = dict_get(d, key);
+    if (!re) return nullptr;
+    return re->value;
+}
+template <typename K, typename V>
 bool dict_heve_key_internal(struct dict_entry<K, V> origin, K key) {
     return key == origin.key;
 }

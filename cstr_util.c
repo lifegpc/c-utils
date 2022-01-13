@@ -2,6 +2,7 @@
 #include "utils_config.h"
 
 #include <malloc.h>
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -9,6 +10,44 @@
 #if HAVE_PRINTF_S
 #define printf printf_s
 #endif
+
+typedef enum float_format {
+    undetected_endian,
+    ieee_big_endian,
+    ieee_little_endian,
+    unknown_endian,
+} float_format_type;
+
+static float_format_type double_format = undetected_endian;
+static float_format_type float_format = undetected_endian;
+
+void detect_double_format() {
+    if (sizeof(double) != 8) double_format = unknown_endian;
+    else {
+        double x = 9006104071833999.0;
+        if (!memcmp(&x, "C?\xff\x01\x02\x03\t\x8f", 8)) {
+            double_format = ieee_big_endian;
+        } else if (!memcmp(&x, "\x8f\t\x03\x02\x01\xff?C", 8)) {
+            double_format = ieee_little_endian;
+        } else {
+            double_format = unknown_endian;
+        }
+    }
+}
+
+void detect_float_format() {
+    if (sizeof(float) != 4) float_format = unknown_endian;
+    else {
+        float x = 213213216.0;
+        if (!memcmp(&x, "MKV\x02", 4)) {
+            float_format = ieee_big_endian;
+        } else if (!memcmp(&x, "\x02VKM", 4)) {
+            float_format = ieee_little_endian;
+        } else {
+            float_format = unknown_endian;
+        }
+    }
+}
 
 int cstr_util_copy_str(char** dest, const char* str) {
     if (!dest || !str) return 1;
@@ -120,4 +159,121 @@ int cstr_read_str(char* buf, char** dest, size_t* pos, size_t buf_len) {
     char* ntmp = realloc(tmp, n + 1);
     *dest = ntmp ? ntmp : tmp;
     return 0;
+}
+
+float cstr_read_float(const uint8_t* p, int big) {
+    if (float_format == undetected_endian) detect_float_format();
+    if (float_format == unknown_endian) {
+        unsigned char sign;
+        int e;
+        unsigned int f;
+        float x;
+        int incr = 1;
+        if (!big) {
+            p += 3;
+            incr = -1;
+        }
+        sign = (*p >> 7) & 1;
+        e = (*p & 0x7F) << 1;
+        p += incr;
+        e |= (*p >> 7) & 1;
+        f = (*p & 0x7F) << 16;
+        p += incr;
+        f |= *p << 8;
+        p += incr;
+        f |= *p;
+        if (e == 255) {
+            if (f == 0) return sign ? -INFINITY : INFINITY;
+            else return NAN;
+        }
+        x = (float)f / 8388608.0;
+        if (e == 0) {
+            e = -126;
+        } else {
+            x += 1.0;
+            e -= 127;
+        }
+        x = ldexpf(x, e);
+        if (sign) x = -x;
+        return x;
+    } else {
+        float x;
+        if ((float_format == ieee_little_endian && big) || (float_format == ieee_big_endian && !big)) {
+            char buf[4];
+            char* d = &(buf[3]);
+            int i;
+            for (i = 0; i < 4; i++) {
+                *d-- = *p++;
+            }
+            memcpy(&x, buf, 4);
+        } else {
+            memcpy(&x, p, 4);
+        }
+        return x;
+    }
+}
+
+double cstr_read_double(const uint8_t* p, int big) {
+    if (double_format == undetected_endian) detect_double_format();
+    if (double_format == unknown_endian) {
+        unsigned char sign;
+        int e;
+        unsigned int fhi, flo;
+        double x;
+        int incr = 1;
+        if (!big) {
+            p += 7;
+            incr = -1;
+        }
+        sign = (*p >> 7) & 1;
+        e = (*p & 0x7F) << 4;
+        p += incr;
+        e |= (*p >> 4) & 0xF;
+        fhi = (*p & 0xF) << 24;
+        p += incr;
+        fhi |= *p << 16;
+        p += incr;
+        fhi |= *p << 8;
+        p += incr;
+        fhi |= *p;
+        p += incr;
+        flo = *p << 16;
+        p += incr;
+        flo |= *p << 8;
+        p += incr;
+        flo |= *p;
+        if (e == 2047) {
+            if (flo == 0 && fhi == 0) {
+                return sign ? -INFINITY : INFINITY;
+            } else {
+                float a = NAN;
+                return a;
+            }
+        }
+        x = (double)fhi + (double)flo / 16777216.0;
+        x /= 268435456.0;
+        if (e == 0)
+            e = -1022;
+        else {
+            x += 1.0;
+            e -= 1023;
+        }
+        x = ldexp(x, e);
+        if (sign) x = -x;
+        return x;
+    } else {
+        double x;
+        if ((double_format == ieee_little_endian && big) || (double_format == ieee_big_endian && !big)) {
+            char buf[8];
+            char* d = &(buf[7]);
+            int i;
+            for (i = 0; i < 8; i++) {
+                *d-- = *p++;
+            }
+            memcpy(&x, buf, 8);
+        } else {
+            memcpy(&x, p, 8);
+        }
+        return x;
+    }
 }
