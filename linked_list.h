@@ -259,6 +259,31 @@ void linked_list_iter(struct LinkedList<T>* list, void(*callback)(size_t index, 
     }
 }
 
+template <typename T, typename ... Args>
+void linked_list_iter(struct LinkedList<T>* list, void(*callback)(T data, Args... args), Args... args) {
+    if (!list || !callback) return;
+    struct LinkedList<T>* t = list;
+    callback(t->d, args...);
+    while (t->next) {
+        t = t->next;
+        callback(t->d, args...);
+    }
+}
+
+template <typename T, typename D, typename ... Args>
+D linked_list_iter(struct LinkedList<T>* list, D(*callback)(T data, Args... args), D failed, Args... args) {
+    if (!list || !callback) return failed;
+    struct LinkedList<T>* t = list;
+    D re = callback(t->d, args...);
+    if (re == failed) return re;
+    while (t->next) {
+        t = t->next;
+        re = callback(t->d, args...);
+        if (re == failed) return re;
+    }
+    return re;
+}
+
 template <typename T>
 void linked_list_remove(struct LinkedList<T>*& node, void(*free_func)(T) = nullptr) {
     if (!node) return;
