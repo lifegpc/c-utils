@@ -168,17 +168,17 @@ void linked_list_free_tail(struct LinkedList<T>*& list, void(*free_func)(T) = nu
     }
 }
 
-template <typename T, typename D>
-struct LinkedList<T>* linked_list_get(struct LinkedList<T>* list, D data, bool(*compare_func)(T, D)) {
+template <typename T, typename D, typename ... Args>
+struct LinkedList<T>* linked_list_get(struct LinkedList<T>* list, D data, bool(*compare_func)(T, D, Args...), Args ... args) {
     if (!list || !compare_func) return nullptr;
     struct LinkedList<T>* t = list;
     while (t->prev) {
         t = t->prev;
     }
-    if (compare_func(t->d, data)) return t;
+    if (compare_func(t->d, data, args...)) return t;
     while (t->next) {
         t = t->next;
-        if (compare_func(t->d, data)) return t;
+        if (compare_func(t->d, data, args...)) return t;
     }
     return nullptr;
 }

@@ -11,6 +11,10 @@
 #define printf printf_s
 #endif
 
+#ifndef min
+#define min(x, y) (((x) < (y)) ? (x) : (y))
+#endif
+
 typedef enum float_format {
     undetected_endian,
     ieee_big_endian,
@@ -276,4 +280,44 @@ double cstr_read_double(const uint8_t* p, int big) {
         }
         return x;
     }
+}
+
+int cstr_stricmp(const char* str1, const char* str2) {
+#if HAVE__STRICMP
+    return _stricmp(str1, str2);
+#elif HAVE_STRCASECMP
+    return strcasecmp(str1, str2);
+#else
+    size_t le = strlen(str1), le2 = strlen(str2);
+    size_t mle = min(le, le2);
+    for (size_t i = 0; i < mle; i++) {
+        int a = tolower(str1[i]), b = tolower(str2[i]);
+        if (a < b) return -1;
+        else if (a > b) return 1;
+    }
+    if (le > le2) return 1;
+    else if (le < le2) return -1;
+    return 0;
+#endif
+}
+
+int cstr_strnicmp(const char* str1, const char* str2, size_t count) {
+#if HAVE__STRNICMP
+    return _strnicmp(str1, str2, count);
+#elif HAVE_STRNCASECMP
+    return strncasecmp(str1, str2, count);
+#else
+    size_t le = strlen(str1), le2 = strlen(str2);
+    size_t mle = min(le, le2);
+    for (size_t i = 0; i < mle; i++) {
+        if (i == count) return 0;
+        int a = tolower(str1[i]), b = tolower(str2[i]);
+        if (a < b) return -1;
+        else if (a > b) return 1;
+    }
+    if (mle == count) return 0;
+    if (le > le2) return 1;
+    else if (le < le2) return -1;
+    return 0;
+#endif
 }

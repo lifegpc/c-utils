@@ -23,12 +23,16 @@ if (WIN32)
     check_symbol_exists(_wcserror_s "string.h" HAVE__WCSERROR_S)
     check_symbol_exists(printf_s "stdio.h" HAVE_PRINTF_S)
     check_symbol_exists(sscanf_s "stdio.h" HAVE_SSCANF_S)
+    check_symbol_exists(_stricmp "string.h" HAVE__STRICMP)
+    check_symbol_exists(_strnicmp "string.h" HAVE__STRNICMP)
 else()
     check_symbol_exists(fseeko "stdio.h" HAVE_FSEEKO)
     check_symbol_exists(fseeko64 "stdio.h" HAVE_FSEEKO64)
     check_symbol_exists(ftello "stdio.h" HAVE_FTELLO)
     check_symbol_exists(ftello64 "stdio.h" HAVE_FTELLO64)
 endif()
+check_symbol_exists(strcasecmp "string.h" HAVE_STRCASECMP)
+check_symbol_exists(strncasecmp "string.h" HAVE_STRNCASECMP)
 check_symbol_exists(strerror_r "string.h" HAVE_STRERROR_R)
 if (HAVE_STRERROR_R)
     test_strerror_r(HAVE_GNU_STRERROR_R)
@@ -53,6 +57,7 @@ set(SOURCE_FILE
     str_util.cpp
     c_linked_list.cpp
     file_reader.c
+    urlparse.cpp
 )
 set(SOURCE_FILE_HEADERS
     cfileop.h
@@ -71,6 +76,7 @@ set(SOURCE_FILE_HEADERS
     linked_list.h
     c_linked_list.h
     file_reader.h
+    urlparse.h
 )
 
 add_library(utils STATIC ${SOURCE_FILE} ${SOURCE_FILE_HEADERS})

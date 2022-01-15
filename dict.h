@@ -24,15 +24,32 @@ template <typename K, typename V>
 bool dict_get_internal(struct dict_entry<K, V> o, K key) {
     return o.key == key;
 }
+template <typename K, typename V, typename D>
+bool dict_get_internal(struct dict_entry<K, V> o, D key, bool(*compare_func)(K, D)) {
+    return compare_func(o.key, key);
+}
 template <typename K, typename V>
 struct dict_entry<K, V>* dict_get(struct Dict<K, V>* d, K key) {
     struct Dict<K, V>* re = (struct Dict<K, V>*)linked_list_get((struct LinkedList<struct dict_entry<K, V>>*)d, key, &dict_get_internal);
     if (!re) return nullptr;
     return &re->d;
 }
+template <typename K, typename V, typename D>
+struct dict_entry<K, V>* dict_get(struct Dict<K, V>* d, D key, bool(*compare_func)(K, D)) {
+    if (!compare_func) return nullptr;
+    struct Dict<K, V>* re = (struct Dict<K, V>*)linked_list_get((struct LinkedList<struct dict_entry<K, V>>*)d, key, &dict_get_internal, compare_func);
+    if (!re) return nullptr;
+    return &re->d;
+}
 template <typename K, typename V>
 V dict_get_value(struct Dict<K, V>* d, K key) {
     struct dict_entry<K, V>* re = dict_get(d, key);
+    if (!re) return nullptr;
+    return re->value;
+}
+template <typename K, typename V, typename D>
+V dict_get_value(struct Dict<K, V>* d, D key, bool(*compare_func)(K, D)) {
+    struct dict_entry<K, V>* re = dict_get(d, key, compare_func);
     if (!re) return nullptr;
     return re->value;
 }
@@ -65,6 +82,19 @@ void dict_iter(struct Dict<K, V>* d, void(*callback)(size_t index, K key, V valu
         i++;
         callback(i, t->d.key, t->d.value, args...);
     }
+}
+template <typename K, typename V, typename R, typename ... Args>
+R dict_iter(struct Dict<K, V>* d, R(*callback)(K key, V value, Args... args), R failed, Args... args) {
+    if (!d || !callback) return failed;
+    struct Dict<K, V>* t = d;
+    R re = callback(t->d.key, t->d.value, args...);
+    if (re == failed) return failed;
+    while (t->next) {
+        t = t->next;
+        re = callback(t->d.key, t->d.value, args...);
+        if (re == failed) return failed;
+    }
+    return re;
 }
 template <typename K, typename V>
 bool dict_set(struct Dict<K, V>*& d, K key, V value, void(*free_func)(V) = nullptr) {

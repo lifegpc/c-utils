@@ -98,6 +98,23 @@ float cstr_read_float(const uint8_t* bytes, int big);
  * @return result
 */
 double cstr_read_double(const uint8_t* bytes, int big);
+/**
+ * @brief Performs a case-insensitive comparison of strings.
+ * @param str1 Null-terminated strings to compare.
+ * @param str2 Null-terminated strings to compare.
+ * @return < 0 str1 less than str2, = 0 str1 identical to str2, > 0 str1 greater than str2
+*/
+int cstr_stricmp(const char* str1, const char* str2);
+#define cstr_strcasecmp cstr_stricmp
+/**
+ * @brief Compares the specified number of characters of two strings without regard to case.
+ * @param str1 Null-terminated strings to compare.
+ * @param str2 Null-terminated strings to compare.
+ * @param count Number of characters to compare.
+ * @return < 0 str1 less than str2, = 0 str1 identical to str2, > 0 str1 greater than str2
+*/
+int cstr_strnicmp(const char* str1, const char* str2, size_t count);
+#define cstr_strncasecmp cstr_strnicmp
 #ifdef __cplusplus
 }
 #endif
