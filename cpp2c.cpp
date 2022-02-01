@@ -24,3 +24,16 @@ bool cpp2c::string2char(std::string inp, char*& out) {
     out = temp;
     return true;
 }
+
+bool cpp2c::string2char(std::wstring inp, wchar_t*& out) {
+    size_t le = inp.length();
+    wchar_t* temp = (wchar_t*)malloc((le + 1) * sizeof(wchar_t));
+    if (!temp) {
+        printf("Out of memory.\n");
+        return false;
+    }
+    memcpy(temp, inp.c_str(), le * sizeof(wchar_t));
+    temp[le] = 0;
+    out = temp;
+    return true;
+}
