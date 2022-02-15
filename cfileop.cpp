@@ -70,6 +70,13 @@ int fileop_isdir(const char* path, int* result) {
     return r ? 1 : 0;
 }
 
+#if _WIN32
+int fileop_isdrive(const char* path) {
+    if (!path) return 0;
+    return fileop::isdrive(path) ? 1 : 0;
+}
+#endif
+
 int fileop_mkdir(const char* path, int mode) {
     if (!path) return 0;
     return fileop::mkdir(path, mode) ? 1 : 0;

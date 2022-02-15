@@ -8,6 +8,7 @@
 #if _WIN32
 #include "Windows.h"
 #endif
+#include "cpp2c.h"
 
 bool err::get_errno_message(std::string &out, int errnum) {
 #if _WIN32
@@ -59,4 +60,12 @@ bool err::get_errno_message(std::string &out, int errnum) {
     return ret != nullptr;
 #endif 
 #endif
+}
+
+char* err_get_errno_message(int errnum) {
+    std::string msg;
+    if (!err::get_errno_message(msg, errnum)) return nullptr;
+    char* tmp;
+    if (!cpp2c::string2char(msg, tmp)) return nullptr;
+    return tmp;
 }

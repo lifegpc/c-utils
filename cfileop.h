@@ -9,6 +9,9 @@ extern "C" {
 #include <stdio.h>
 #include <sys/types.h>
 #include <fcntl.h>
+#if _WIN32
+#include <io.h>
+#endif
 /**
  * @brief Check file exists
  * @param fn File name
@@ -78,6 +81,14 @@ char* fileop_join(const char* path, const char* path2);
  * @return 0 if error occured otherwise 1
 */
 int fileop_isdir(const char* path, int* result);
+#if _WIN32
+/**
+ * @brief Check if a path only contains drive.
+ * @param path Path
+ * @return 1 if true otherwise 0
+*/
+int fileop_isdrive(const char* path);
+#endif
 /**
  * @brief Creates a new directory.
  * @param path Path for a new directory.
