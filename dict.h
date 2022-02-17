@@ -16,6 +16,15 @@ template <typename T, typename V>
 size_t dict_count(struct Dict<T, V>* d) {
     return linked_list_count((struct LinkedList<struct dict_entry<T, V>>*)d);
 }
+template <typename K, typename V>
+bool dict_delete_internal(struct dict_entry<K, V> o, K key) {
+    return o.key == key;
+}
+template <typename K, typename V>
+bool dict_delete(struct Dict<K, V>*& d, K key) {
+    if (!d) return false;
+    return linked_list_delete((struct LinkedList<struct dict_entry<K, V>>*&)d, key, dict_delete_internal);
+}
 template <typename T, typename V>
 void dict_free(struct Dict<T, V>*& d, void(*free_func)(struct dict_entry<T, V>) = nullptr) {
     return linked_list_clear((struct LinkedList<struct dict_entry<T, V>>*&)d, free_func);

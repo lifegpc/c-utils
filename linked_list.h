@@ -153,6 +153,49 @@ bool linked_list_delete(struct LinkedList<T>*& list, T data) {
     return false;
 }
 
+template <typename T, typename D>
+bool linked_list_delete(struct LinkedList<T>*& list, D data, bool(*is_same)(T, D)) {
+    if (!list || !is_same) return false;
+    struct LinkedList<T>* t = list;
+    while (t->prev) {
+        t = t->prev;
+    }
+    if (is_same(t->d, data)) {
+        if (t->prev) t->prev->next = t->next;
+        if (t->next) t->next->prev = t->prev;
+        if (t == list) {
+            if (t->prev) {
+                list = t->prev;
+            } else if (t->next) {
+                list = t->next;
+            } else {
+                list = nullptr;
+            }
+        }
+        free(t);
+        return true;
+    }
+    while (t->next) {
+        t = t->next;
+        if (is_same(t->d, data)) {
+            if (t->prev) t->prev->next = t->next;
+            if (t->next) t->next->prev = t->prev;
+            if (t == list) {
+                if (t->prev) {
+                    list = t->prev;
+                } else if (t->next) {
+                    list = t->next;
+                } else {
+                    list = nullptr;
+                }
+            }
+            free(t);
+            return true;
+        }
+    }
+    return false;
+}
+
 template <typename T>
 void linked_list_free_tail(struct LinkedList<T>*& list, void(*free_func)(T) = nullptr) {
     if (!list) return;
