@@ -69,3 +69,17 @@ char* err_get_errno_message(int errnum) {
     if (!cpp2c::string2char(msg, tmp)) return nullptr;
     return tmp;
 }
+
+#if _WIN32
+bool err::get_winerror(std::string& out, int32_t errnum) {
+    LPWSTR errbuf;
+    DWORD len;
+    if (!(len = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr, errnum, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)&errbuf, 0, nullptr))) {
+        if (errbuf) LocalFree(errbuf);
+        return false;
+    }
+    bool re = wchar_util::wstr_to_str(out, std::wstring(errbuf, len), CP_UTF8);
+    LocalFree(errbuf);
+    return re;
+}
+#endif

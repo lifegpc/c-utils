@@ -1,6 +1,9 @@
 #ifndef _UTILS_ERR_H
 #define _UTILS_ERR_H
 #if __cplusplus
+extern "C" {
+#include <stdint.h>
+}
 #include <string>
 
 namespace err {
@@ -11,6 +14,15 @@ namespace err {
      * @returns true if successed
     */
     bool get_errno_message(std::string &out, int errnum);
+#if _WIN32
+    /**
+     * @brief Get error message for HRESULT
+     * @param out Output string
+     * @param errnum HRESULT
+     * @return true if successed
+    */
+    bool get_winerror(std::string &out, int32_t errnum);
+#endif
 }
 extern "C" {
 #endif
