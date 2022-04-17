@@ -341,6 +341,14 @@ void linked_list_remove(struct LinkedList<T>*& node, void(*free_func)(T) = nullp
 }
 
 template <typename T>
+void linked_list_remove_before(struct LinkedList<T>* node, void(*free_func)(T) = nullptr) {
+    if (!node) return;
+    while (node->prev) {
+        linked_list_remove(node->prev, free_func);
+    }
+}
+
+template <typename T>
 struct LinkedList<T>* linked_list_tail(struct LinkedList<T>* list) {
     if (!list) return nullptr;
     struct LinkedList<T>* t = list;
