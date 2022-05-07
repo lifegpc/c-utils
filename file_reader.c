@@ -266,3 +266,86 @@ int file_reader_read_str(file_reader_file* f, char** buf) {
     f->seek(f->f, offset, origin);
     return 0;
 }
+
+int file_reader_read_line(file_reader_file* f, char** buf, size_t* buf_size) {
+    if (!f) return 1;
+    char* b = NULL;
+    char bu[128];
+    size_t blen = 128, n = 0, c = 0, tc = 0, pos = 0;
+    if (buf) {
+        b = malloc(blen);
+        if (!b) return 1;
+    }
+    int64_t offset = f->tell(f->f);
+    int origin = SEEK_SET;
+    if (offset == -1) {
+        origin = SEEK_CUR;
+    }
+    while (1) {
+        if (n >= c) {
+            if (!(tc = f->read(f->f, 128, bu))) {
+                if (c > 0) {
+                    n--;
+                    break;
+                }
+                if (b) free(b);
+                if (origin == SEEK_CUR) {
+                    offset = -c;
+                }
+                f->seek(f->f, offset, origin);
+                return 1;
+            }
+            c += tc;
+        }
+        if (buf && n >= blen) {
+            size_t nlen = blen + 128;
+            char* nb = realloc(b, nlen);
+            if (!nb) {
+                if (b) free(b);
+                if (origin == SEEK_CUR) {
+                    offset = -c;
+                }
+                f->seek(f->f, offset, origin);
+                return 1;
+            }
+            b = nb;
+            blen = nlen;
+        }
+        pos = n - (c - tc);
+        if (buf && b) {
+            b[n] = bu[pos];
+        }
+        if (bu[pos] == '\n') {
+            break;
+        }
+        n++;
+    }
+    if (origin == SEEK_SET) {
+        offset += n + 1;
+    } else {
+        offset = -(c - n - 1);
+    }
+    f->seek(f->f, offset, origin);
+    if (n >= 1 && b && b[n - 1] == '\r' && b[n] == '\n') {
+        n -= 2;
+    } else if (b && b[n] == '\n') {
+        n -= 1;
+    }
+    if (buf) {
+        char* nb = realloc(b, n + 2);
+        if (!nb) {
+            free(b);
+            if (origin == SEEK_CUR) {
+                offset = -c;
+            }
+            f->seek(f->f, offset, origin);
+            return 1;
+        }
+        nb[n + 1] = 0;
+        *buf = nb;
+    }
+    if (buf_size) {
+        *buf_size = n + 1;
+    }
+    return 0;
+}

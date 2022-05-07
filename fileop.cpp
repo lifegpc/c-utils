@@ -535,3 +535,11 @@ std::string fileop::filename(std::string path) {
     auto loc = path.find_last_of('.');
     return loc == -1 ? path : path.substr(0, loc);
 }
+
+int fileop::fcloseall() {
+#if _WIN32
+    return ::_fcloseall();
+#else
+    return ::closeall();
+#endif
+}

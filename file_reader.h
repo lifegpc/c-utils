@@ -117,6 +117,14 @@ int file_reader_read_int64(file_reader_file* f, int64_t* re);
  * @return 0 if successed otherwise 1
 */
 int file_reader_read_str(file_reader_file* f, char** buf);
+/**
+ * @brief Read a line (ends with \\r\\n or \\n) from reader
+ * @param f reader
+ * @param buf Result. (\\r\\n or \\n is removed) Need free memory by using free.
+ * @param buf_size The size of the result.
+ * @return 0 if successed otherwise 1
+*/
+int file_reader_read_line(file_reader_file* f, char** buf, size_t* buf_size);
 #if __cplusplus
 }
 #endif
