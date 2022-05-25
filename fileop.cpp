@@ -540,6 +540,6 @@ int fileop::fcloseall() {
 #if _WIN32
     return ::_fcloseall();
 #else
-    return ::closeall();
+    return ::fcloseall();
 #endif
 }
