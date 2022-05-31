@@ -539,7 +539,9 @@ std::string fileop::filename(std::string path) {
 int fileop::fcloseall() {
 #if _WIN32
     return ::_fcloseall();
-#else
+#elif HAVE_FCLOSEALL
     return ::fcloseall();
+#else
+    return 0;
 #endif
 }

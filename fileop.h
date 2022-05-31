@@ -171,6 +171,7 @@ namespace fileop {
     std::string filename(std::string path);
     /**
      * @brief Close all open streams
+     * If no function is called, will return 0.
      * @return 0(>=0) succeed. EOF error happened.
     */
     int fcloseall();
