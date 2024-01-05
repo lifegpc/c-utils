@@ -33,5 +33,12 @@ namespace str_util {
      * @return Output
     */
     std::string str_hex(std::string input);
+    /**
+     * @brief Check if a string ends with a pattern
+     * @param input Input data
+     * @param pattern Pattern
+     * @return true if input ends with pattern
+    */
+    bool str_endswith(std::string input, std::string pattern);
 }
 #endif

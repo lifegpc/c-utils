@@ -57,3 +57,11 @@ std::string str_util::str_hex(std::string input) {
     }
     return output;
 }
+
+bool str_util::str_endswith(std::string input, std::string pattern) {
+    auto ilen = input.length();
+    auto plen = pattern.length();
+    if (ilen < plen) return false;
+    auto i = input.rfind(pattern);
+    return i == ilen - plen; 
+}
