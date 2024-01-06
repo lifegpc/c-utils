@@ -18,6 +18,18 @@ bool str_util::tolowercase(std::string ori, std::string& result) {
     }
 }
 
+bool str_util::touppercase(std::string ori, std::string& result) {
+    char* tmp = nullptr;
+    auto re = cstr_touppercase(ori.c_str(), ori.length(), &tmp);
+    if (re) {
+        result = std::string(tmp, ori.length());
+        free(tmp);
+        return true;
+    } else {
+        return false;
+    }
+}
+
 std::string str_util::str_replace(std::string input, std::string pattern, std::string new_content) {
     auto loc = input.find(pattern, 0);
     auto len = pattern.length();

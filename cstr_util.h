@@ -28,6 +28,14 @@ int cstr_is_integer(const char* str, int allow_sign);
 */
 int cstr_tolowercase(const char* str, size_t input_len, char** output);
 /**
+ * @brief Convert string to uppercase
+ * @param str Origin string
+ * @param input_len The length of origin string. If is 0, strlen will be called to calculate length.
+ * @param output Output string. Need free memory by calling free.
+ * @return 1 if successed otherwise 0.
+*/
+int cstr_touppercase(const char* str, size_t input_len, char** output);
+/**
  * @brief Convert bytes to uint32
  * @param bytes Bytes (at least 4 bytes)
  * @param big 0 if little endian otherwise big endian

@@ -13,6 +13,13 @@ namespace str_util {
     */
     bool tolowercase(std::string ori, std::string& result);
     /**
+     * @brief Convert string to uppercase
+     * @param ori Origin string
+     * @param result Output string.
+     * @return true if successed.
+    */
+    bool touppercase(std::string ori, std::string& result);
+    /**
      * @brief Replace all pattern to new_content
      * @param input Input string
      * @param pattern Pattern

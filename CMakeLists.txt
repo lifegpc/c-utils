@@ -4,6 +4,7 @@ option(ENABLE_ICONV "Use libiconv to convert encoding" ON)
 option(ENABLE_STANDALONE "Build utils standalone" OFF)
 option(ENABLE_CXX17 "Enable C++ 17" OFF)
 option(INSTALL_DEP_FILES "Install a file with dependences." OFF)
+option(ENABLE_SSL "Enable SSL" OFF)
 
 if (ENABLE_STANDALONE)
     project(utils)
@@ -21,6 +22,11 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
 if (ENABLE_ICONV)
     find_package(Iconv)
+endif()
+
+if (ENABLE_SSL)
+    find_package(OpenSSL 3.0.0 REQUIRED)
+    set(HAVE_OPENSSL 1)
 endif()
 
 if (Iconv_FOUND)
@@ -82,6 +88,7 @@ set(SOURCE_FILE
     c_linked_list.cpp
     file_reader.c
     urlparse.cpp
+    http_client.cpp
 )
 set(SOURCE_FILE_HEADERS
     cfileop.h
@@ -101,6 +108,7 @@ set(SOURCE_FILE_HEADERS
     c_linked_list.h
     file_reader.h
     urlparse.h
+    http_client.h
 )
 
 add_library(utils STATIC ${SOURCE_FILE} ${SOURCE_FILE_HEADERS})
@@ -117,6 +125,12 @@ if (INSTALL_DEP_FILES)
     if (WIN32)
         target_link_libraries(utils shell32)
     endif()
+endif()
+if (WIN32)
+    target_link_libraries(utils Ws2_32)
+endif()
+if (ENABLE_SSL)
+    target_link_libraries(utils OpenSSL::SSL OpenSSL::Crypto)
 endif()
 if (ENABLE_CXX17)
     target_compile_features(utils PRIVATE cxx_std_17)

@@ -92,6 +92,21 @@ int cstr_tolowercase(const char* str, size_t input_len, char** output) {
     return 1;
 }
 
+int cstr_touppercase(const char* str, size_t input_len, char** output) {
+    if (!str || !output) return 0;
+    if (!input_len) input_len = strlen(str);
+    if (input_len == (size_t)-1) return 0;
+    char* tmp = malloc(input_len + 1);
+    if (!tmp) return 0;
+    size_t i = 0;
+    for (; i < input_len; i++) {
+        tmp[i] = toupper(str[i]);
+    }
+    tmp[input_len] = 0;
+    *output = tmp;
+    return 1;
+}
+
 uint32_t cstr_read_uint32(const uint8_t* bytes, int big) {
     if (!bytes) return 0;
     return big ? (bytes[0] << 24) + (bytes[1] << 16) + (bytes[2] << 8) + bytes[3] : bytes[0] + (bytes[1] << 8) + (bytes[2] << 16) + (bytes[3] << 24);
