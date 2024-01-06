@@ -30,20 +30,31 @@ std::string str_util::str_replace(std::string input, std::string pattern, std::s
     return input;
 }
 
-std::list<std::string> str_util::str_split(std::string input, std::string pattern, size_t max) {
+std::list<std::string> str_util::str_split(std::string input, std::string pattern, size_t max, bool break_quote) {
     if (max == 0) return {};
     std::list<std::string> li;
     auto loc = input.find(pattern, 0);
     auto last_loc = 0;
+    auto pre_loc = 0;
     auto len = pattern.length();
     while (loc != -1 && li.size() < max) {
-        li.push_back(input.substr(last_loc, loc - last_loc));
+        auto s = input.substr(pre_loc, loc - pre_loc);
+        if (break_quote || (s.front() != '"' && s.front() != '\'') || s.back() == s.front()) {
+            li.push_back(s);
+            pre_loc = loc + len;
+        }
         last_loc = loc + len;
         if (last_loc < input.length()) loc = input.find(pattern, max(0, last_loc));
         else break;
     }
-    if (last_loc <= input.length()) li.push_back(input.substr(last_loc, input.length() - last_loc));
+    if (last_loc <= input.length()) li.push_back(input.substr(pre_loc, input.length() - pre_loc));
     return li;
+}
+
+std::vector<std::string> str_util::str_splitv(std::string input, std::string pattern, size_t max, bool break_quote) {
+    auto list = str_split(input, pattern, max, break_quote);
+    std::vector<std::string> vec(list.begin(), list.end());
+    return vec;
 }
 
 std::string str_util::str_hex(std::string input) {
@@ -64,4 +75,15 @@ bool str_util::str_endswith(std::string input, std::string pattern) {
     if (ilen < plen) return false;
     auto i = input.rfind(pattern);
     return i == ilen - plen; 
+}
+
+std::string str_util::remove_quote(std::string input) {
+    if (input.length() < 2) return input;
+    if (input[0] == '"' && input[input.length() - 1] == '"') {
+        return input.substr(1, input.length() - 2);
+    } else if (input[0] == '\'' && input[input.length() - 1] == '\'') {
+        return input.substr(1, input.length() - 2);
+    } else {
+        return input;
+    }
 }
