@@ -151,7 +151,7 @@ public:
     Response() = delete;
     explicit Response(Socket socket);
     HeaderMap headers;
-    uint8_t code = 0;
+    uint16_t code = 0;
     std::string reason;
     std::string read();
     std::string readAll();

@@ -455,7 +455,7 @@ void Response::parseStatus() {
     if (cstr_stricmp(parts[0].c_str(), "http/1.1")) {
         throw std::runtime_error("Unspported HTTP version");
     }
-    if (sscanf(parts[1].c_str(), "%" SCNu8, &this->code) != 1) {
+    if (sscanf(parts[1].c_str(), "%" SCNu16, &this->code) != 1) {
         throw std::runtime_error("Invalid HTTP status code");
     }
     this->reason = parts[2];
