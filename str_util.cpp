@@ -99,3 +99,13 @@ std::string str_util::remove_quote(std::string input) {
         return input;
     }
 }
+
+std::string str_util::str_trim(std::string input) {
+    while (!input.empty() && (input.front() == ' ' || input.front() == '\t' || input.front() == '\r' || input.front() == '\n')) {
+        input.erase(input.begin());
+    }
+    while (!input.empty() && (input.back() == ' ' || input.back() == '\t' || input.back() == '\r' || input.back() == '\n')) {
+        input.erase(input.end() - 1);
+    }
+    return input;
+}

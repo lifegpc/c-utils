@@ -9,6 +9,7 @@
 
 #include <stdexcept>
 #include <string>
+#include "inttypes.h"
 
 #if _WIN32
 static bool inited = false;
@@ -17,6 +18,14 @@ static WSADATA wsaData = { 0 };
 
 #if HAVE_OPENSSL
 static bool ssl_inited = false;
+#endif
+
+#if HAVE_PRINTF_S
+#define printf printf_s
+#endif
+
+#if HAVE_SSCANF_S
+#define sscanf sscanf_s
 #endif
 
 AIException::AIException(int code) {
@@ -108,6 +117,7 @@ Socket::Socket(std::string host, std::string protocol) {
 }
 
 Socket::~Socket() {
+    if (this->moved) return;
 #if HAVE_OPENSSL
     if (this->ssl_ctx) {
         SSL_CTX_free(this->ssl_ctx);
@@ -272,7 +282,7 @@ Request::Request(std::string host, std::string path, std::string method, HeaderM
     this->options = options;
 }
 
-void Request::send() {
+Response Request::send() {
     std::string data;
     data += this->method + " " + this->path + " HTTP/1.1\r\n";
     auto hasBody = !this->body || !this->body->isFinished();
@@ -289,7 +299,6 @@ void Request::send() {
         data += header.first + ": " + header.second + "\r\n";
     }
     data += "\r\n";
-    printf("%s", data.c_str());
 #if HAVE_OPENSSL
     Socket socket(this->host, this->options.https ? "https" : "http");
 #else
@@ -302,12 +311,15 @@ void Request::send() {
             char buf[1024];
             size_t len = this->body->pullData(buf, 1024);
             socket.send(buf, len, 0);
-            printf("%s", std::string(buf, len).c_str());
         }
         socket.send("\r\n");
     }
-    auto s = socket.recv(10240);
-    printf("%s\n", s.c_str());
+    return Response(socket);
+}
+
+void Request::setBody(HttpBody* body) {
+    if (this->body != nullptr) delete this->body;
+    this->body = body;
 }
 
 HttpClient::HttpClient(std::string host) {
@@ -420,4 +432,116 @@ Request::~Request() {
     if (this->body) {
         delete this->body;
     }
+}
+
+Response::Response(Socket socket): socket(socket) {
+    parseStatus();
+    parseHeader();
+}
+
+bool Response::pullData() {
+    if (!this->buff.empty()) return false;
+    this->buff = this->socket.recv(1024);
+    return this->buff.empty();
+}
+
+void Response::parseStatus() {
+    if (this->code) return;
+    auto line = this->readLine();
+    auto parts = str_util::str_splitv(line, " ", 3);
+    if (parts.size() < 3) {
+        throw std::runtime_error("Invalid HTTP status line");
+    }
+    if (cstr_stricmp(parts[0].c_str(), "http/1.1")) {
+        throw std::runtime_error("Unspported HTTP version");
+    }
+    if (sscanf(parts[1].c_str(), "%" SCNu8, &this->code) != 1) {
+        throw std::runtime_error("Invalid HTTP status code");
+    }
+    this->reason = parts[2];
+}
+
+void Response::parseHeader() {
+    if (!this->code) parseStatus();
+    if (this->headerParsed) return;
+    this->headerParsed = true;
+    auto line = this->readLine();
+    while (!line.empty()) {
+        auto kv = str_util::str_splitv(line, ": ", 2);
+        if (kv.size() < 2) {
+            throw std::runtime_error("Invalid HTTP header");
+        }
+        this->headers[kv[0]] = kv[1];
+        if (!cstr_stricmp(kv[0].c_str(), "transfer-encoding")) {
+            auto list = str_util::str_splitv(kv[1], ",");
+            for (auto& item : list) {
+                auto it = str_util::str_trim(item);
+                if (!cstr_stricmp(it.c_str(), "chunked")) {
+                    this->chunked = true;
+                    break;
+                } else {
+                    throw std::runtime_error("Unspported transfer-encoding");
+                }
+            }
+        }
+        line = this->readLine();
+    }
+}
+
+std::string Response::readLine() {
+    std::string line;
+    while (true) {
+        if (this->pullData()) break;
+        auto pos = this->buff.find("\r\n");
+        if (pos == std::string::npos) {
+            line += this->buff;
+            this->buff.clear();
+        } else {
+            line += this->buff.substr(0, pos);
+            this->buff = this->buff.substr(pos + 2);
+            break;
+        }
+    }
+    return line;
+}
+
+std::string Response::read() {
+    if (!this->code) this->parseStatus();
+    if (!this->headerParsed) this->parseHeader();
+    if (this->chunked) {
+        std::string data;
+        size_t size = -1;
+        auto line = this->readLine();
+        if (sscanf(line.c_str(), "%zx", &size) != 1) {
+            throw std::runtime_error("Invalid chunk size");
+        }
+        size_t osize = size;
+        while (size > 0) {
+            if (this->pullData()) break;
+            auto len = std::min(this->buff.length(), size);
+            data += this->buff.substr(0, len);
+            this->buff = this->buff.substr(len);
+            size -= len;
+        }
+        if (osize != data.length()) {
+            throw std::runtime_error("Chunk size != data length");
+        }
+        this->readLine();
+        return data;
+    } else {
+        if (this->pullData()) return "";
+        auto data = this->buff;
+        this->buff.clear();
+        return data;
+    }
+}
+
+std::string Response::readAll() {
+    std::string data;
+    auto d = this->read();
+    while (!d.empty()) {
+        data += d;
+        d = this->read();
+    }
+    return data;
 }

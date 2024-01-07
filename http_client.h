@@ -2,6 +2,7 @@
 #define _UTIL_HTTP_CLIENT_H
 
 #include <stddef.h>
+#include <stdint.h>
 #include <string>
 #include <map>
 #include <memory>
@@ -95,6 +96,10 @@ private:
 class Socket {
 public:
     Socket(std::string host, std::string protocol);
+    Socket(Socket& socket) {
+        *this = socket;
+        socket.moved = true;
+    }
     ~Socket();
     void connect();
     size_t send(const char* data, size_t len, int flags = 0);
@@ -116,6 +121,7 @@ private:
     BIO* web = nullptr;
     SSL* ssl = nullptr;
 #endif
+    bool moved = false;
     std::string host;
     std::string protocol;
     int socket = -1;
@@ -123,30 +129,41 @@ private:
     addrinfo* addr = nullptr;
 };
 
+typedef struct Response Response;
+
 class Request {
 public:
     Request(std::string host, std::string path, std::string method, HeaderMap headers, HttpClientOptions options);
     ~Request();
-    void send();
+    Response send();
     HeaderMap headers;
     HttpClientOptions options;
-    void setBody(HttpBody* body) {
-        if (this->body != nullptr) delete this->body;
-        this->body = body;
-    }
-private:
-    HttpBody* body = nullptr;
+    void setBody(HttpBody* body);
     std::string host;
     std::string path;
     std::string method;
+private:
+    HttpBody* body = nullptr;
 };
 
 class Response {
 public:
-    Response(Request req, Socket socket);
+    Response() = delete;
+    explicit Response(Socket socket);
+    HeaderMap headers;
+    uint8_t code = 0;
+    std::string reason;
+    std::string read();
+    std::string readAll();
 private:
-    Request req;
+    std::string readLine();
+    void parseHeader();
+    void parseStatus();
+    bool pullData();
+    bool headerParsed = false;
+    bool chunked = false;
     Socket socket;
+    std::string buff;
 };
 
 class HttpClient {

@@ -59,6 +59,12 @@ namespace str_util {
     */
     bool str_endswith(std::string input, std::string pattern);
     /**
+     * @brief Trim a string
+     * @param input Input string
+     * @return Result
+    */
+    std::string str_trim(std::string input);
+    /**
      * @brief Remove quote from a string
      * @param input Input string
      * @return Result
