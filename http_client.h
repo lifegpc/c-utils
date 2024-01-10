@@ -23,6 +23,10 @@
 #include "openssl/ssl.h"
 #endif
 
+#if HAVE_ZLIB
+#include "zlib.h"
+#endif
+
 struct HeaderNameCompare {
     bool operator()(const std::string& a, const std::string& b) const {
         return cstr_stricmp(a.c_str(), b.c_str()) < 0;
@@ -35,7 +39,6 @@ std::string decodeURIComponent(std::string str);
 
 class HttpClientOptions {
 public:
-    bool https = false;
 };
 
 class HttpBody {
@@ -95,7 +98,7 @@ private:
 
 class Socket {
 public:
-    Socket(std::string host, std::string protocol);
+    Socket(std::string host, std::string port, bool https = false);
     Socket(Socket& socket) {
         *this = socket;
         socket.moved = true;
@@ -118,12 +121,12 @@ public:
 private:
 #if HAVE_OPENSSL
     SSL_CTX* ssl_ctx = nullptr;
-    BIO* web = nullptr;
     SSL* ssl = nullptr;
 #endif
     bool moved = false;
     std::string host;
-    std::string protocol;
+    std::string port;
+    bool https = false;
     int socket = -1;
     bool closed = false;
     addrinfo* addr = nullptr;
@@ -133,13 +136,15 @@ typedef struct Response Response;
 
 class Request {
 public:
-    Request(std::string host, std::string path, std::string method, HeaderMap headers, HttpClientOptions options);
+    Request(std::string host, std::string port, bool https, std::string path, std::string method, HeaderMap headers, HttpClientOptions options);
     ~Request();
     Response send();
     HeaderMap headers;
     HttpClientOptions options;
     void setBody(HttpBody* body);
     std::string host;
+    std::string port;
+    bool https = false;
     std::string path;
     std::string method;
 private:
@@ -150,6 +155,7 @@ class Response {
 public:
     Response() = delete;
     explicit Response(Socket socket);
+    ~Response();
     HeaderMap headers;
     uint16_t code = 0;
     std::string reason;
@@ -162,6 +168,12 @@ private:
     bool pullData();
     bool headerParsed = false;
     bool chunked = false;
+#if HAVE_ZLIB
+    bool gzip = false;
+    bool deflate = false;
+    z_stream zstream;
+    std::string inflate(std::string data);
+#endif
     Socket socket;
     std::string buff;
 };
@@ -174,6 +186,8 @@ public:
     HeaderMap headers;
 private:
     std::string host;
+    std::string port;
+    bool https = false;
 };
 
 #endif
