@@ -619,14 +619,12 @@ std::string Response::inflate(std::string data) {
         if (res == Z_STREAM_END) {
             re += std::string(buf, 10240 - this->zstream.avail_out);
             break;
-        } else if (res == Z_BUF_ERROR) {
-            re += std::string(buf, 10240 - this->zstream.avail_out);
-        } else if (res != Z_OK) {
+        } else if (res == Z_STREAM_ERROR || res == Z_NEED_DICT || res == Z_DATA_ERROR || res == Z_MEM_ERROR) {
             throw std::runtime_error("inflate failed");
         } else {
             re += std::string(buf, 10240 - this->zstream.avail_out);
-            break;
         }
+        if (this->zstream.avail_out != 0) break;
     }
     return re;
 }
