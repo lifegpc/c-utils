@@ -137,10 +137,12 @@ typedef struct Response Response;
 class Request {
 public:
     Request(std::string host, std::string port, bool https, std::string path, std::string method, HeaderMap headers, HttpClientOptions options);
+    Request(std::string url, std::string method, HttpClientOptions options = {}, HeaderMap headers = {});
     ~Request();
     Response send();
     HeaderMap headers;
     HttpClientOptions options;
+    HttpBody* getBody();
     void setBody(HttpBody* body);
     std::string host;
     std::string port;
@@ -161,6 +163,7 @@ public:
     std::string reason;
     std::string read();
     std::string readAll();
+    bool isEof();
 private:
     std::string readLine();
     void parseHeader();
@@ -168,6 +171,7 @@ private:
     bool pullData();
     bool headerParsed = false;
     bool chunked = false;
+    bool eof = false;
 #if HAVE_ZLIB
     bool gzip = false;
     bool deflate = false;

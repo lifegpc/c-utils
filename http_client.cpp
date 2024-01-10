@@ -6,6 +6,7 @@
 
 #include "err.h"
 #include "str_util.h"
+#include "urlparse.h"
 
 #include <stdexcept>
 #include <string>
@@ -37,6 +38,33 @@ const char* AIException::what() {
     return gai_strerrorA(this->code);
 #else
     return gai_strerror(this->code);
+#endif
+}
+
+std::string getDefaultAcceptEncoding() {
+    std::string ae = "";
+#if HAVE_ZLIB
+    ae += "deflate, gzip";
+#endif
+    return ae;
+}
+
+void make_sure_http_client_inited() {
+#if _WIN32
+    if (!inited) {
+        WSAStartup(MAKEWORD(2, 2), &wsaData);
+        inited = true;
+    }
+#endif
+#if HAVE_OPENSSL
+    if (!ssl_inited) {
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+        SSL_library_init();
+#else
+        SSL_load_error_strings();
+#endif
+        ssl_inited = true;
+    }
 #endif
 }
 
@@ -329,22 +357,7 @@ HttpClient::HttpClient(std::string host) {
     } else {
         this->port = this->https ? "https" : "http";
     }
-#if _WIN32
-    if (!inited) {
-        WSAStartup(MAKEWORD(2, 2), &wsaData);
-        inited = true;
-    }
-#endif
-#if HAVE_OPENSSL
-    if (!ssl_inited) {
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-        SSL_library_init();
-#else
-        SSL_load_error_strings();
-#endif
-        ssl_inited = true;
-    }
-#endif
+    make_sure_http_client_inited();
     if (is_number_port) {
         this->headers["Host"] = this->host + ":" + this->port;
     } else {
@@ -352,11 +365,7 @@ HttpClient::HttpClient(std::string host) {
     }
     this->headers["User-Agent"] = "simple-http-client";
     this->headers["Accept"] = "*/*";
-    std::string ae = "";
-#if HAVE_ZLIB
-    ae += "deflate, gzip";
-#endif
-    this->headers["Accept-Encoding"] = ae;
+    this->headers["Accept-Encoding"] = getDefaultAcceptEncoding();
 }
 
 Request HttpClient::request(std::string path, std::string method) {
@@ -459,6 +468,9 @@ Response::Response(Socket socket): socket(socket) {
 bool Response::pullData() {
     if (!this->buff.empty()) return false;
     this->buff = this->socket.recv(1024);
+    if (this->buff.empty()) {
+        this->eof = true;
+    }
     return this->buff.empty();
 }
 
@@ -554,6 +566,7 @@ std::string Response::read() {
         std::string data;
         size_t size = -1;
         auto line = this->readLine();
+        if (this->eof) return "";
         if (sscanf(line.c_str(), "%zx", &size) != 1) {
             throw std::runtime_error("Invalid chunk size");
         }
@@ -569,6 +582,9 @@ std::string Response::read() {
             throw std::runtime_error("Chunk size != data length");
         }
         this->readLine();
+        if (!osize) {
+            this->eof = true;
+        }
 #if HAVE_ZLIB
         if (this->gzip || this->deflate) {
             return this->inflate(data);
@@ -591,7 +607,7 @@ std::string Response::read() {
 std::string Response::readAll() {
     std::string data;
     auto d = this->read();
-    while (!d.empty()) {
+    while (!this->eof) {
         data += d;
         d = this->read();
     }
@@ -629,3 +645,60 @@ std::string Response::inflate(std::string data) {
     return re;
 }
 #endif
+
+Request::Request(std::string url, std::string method, HttpClientOptions options, HeaderMap headers) {
+    auto u = urlparse(url.c_str(), nullptr, 1);
+    if (!u) {
+        throw std::runtime_error("Invalid URL");
+    }
+    this->path = u->path;
+    std::string params = u->params, query = u->query, scheme = u->scheme, netloc = u->netloc;
+    free_url_parse_result(u);
+    if (!params.empty()) {
+        this->path += ";" + params;
+    }
+    if (!query.empty()) {
+        this->path += "?" + query;
+    }
+    bool is_number_port = false;
+    if (!scheme.empty()) {
+        if (!cstr_stricmp(scheme.c_str(), "http")) {
+            this->https = false;
+        } else if (!cstr_stricmp(scheme.c_str(), "https")) {
+            this->https = true;
+        } else {
+            throw std::runtime_error("Unspported protocol");
+        }
+    }
+    auto pos = netloc.find(":");
+    if (pos != std::string::npos) {
+        this->port = netloc.substr(pos + 1);
+        this->host = netloc.substr(0, pos);
+        is_number_port = true;
+    } else {
+        this->host = netloc;
+        this->port = this->https ? "https" : "http";
+    }
+    this->method = method;
+    this->options = options;
+    if (is_number_port) {
+        this->headers["Host"] = this->host + ":" + this->port;
+    } else {
+        this->headers["Host"] = this->host;
+    }
+    this->headers["User-Agent"] = "simple-http-client";
+    this->headers["Accept"] = "*/*";
+    this->headers["Accept-Encoding"] = getDefaultAcceptEncoding();
+    for (auto& header : headers) {
+        this->headers[header.first] = header.second;
+    }
+    make_sure_http_client_inited();
+}
+
+HttpBody* Request::getBody() {
+    return this->body;
+}
+
+bool Response::isEof() {
+    return this->eof;
+}
