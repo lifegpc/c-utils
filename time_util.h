@@ -14,5 +14,8 @@ namespace time_util {
     */
     void time_t_to_file_time(time_t t, LPFILETIME pft);
 #endif
+    char* strptime(const char* s, const char* format, struct tm* tm);
+    long get_timezone();
+    time_t timegm(struct tm* tm);
 }
 #endif

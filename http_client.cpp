@@ -3,14 +3,25 @@
 #ifndef _WIN32
 #include <unistd.h>
 #endif
+#include <fcntl.h>
+#if _WIN32
+#include <Windows.h>
+#endif
 
+#include "cstr_util.h"
 #include "err.h"
+#include "fileop.h"
+#include "file_reader.h"
 #include "str_util.h"
 #include "urlparse.h"
+#include "time_util.h"
 
+#include <malloc.h>
 #include <stdexcept>
 #include <string>
 #include "inttypes.h"
+
+#include <time.h>
 
 #if _WIN32
 static bool inited = false;
@@ -27,6 +38,30 @@ static bool ssl_inited = false;
 
 #if HAVE_SSCANF_S
 #define sscanf sscanf_s
+#endif
+
+#if HAVE_FPRINTF_S
+#define fprintf fprintf_s
+#endif
+
+#ifndef _O_BINARY
+#if _WIN32
+#define _O_BINARY 0x8000
+#else
+#define _O_BINARY 0
+#endif
+#endif
+
+#ifndef _SH_DENYWR
+#define _SH_DENYWR 0x20
+#endif
+
+#ifndef _S_IWRITE
+#define _S_IWRITE 0x80
+#endif
+
+#ifndef _S_IREAD
+#define _S_IREAD 0x100
 #endif
 
 AIException::AIException(int code) {
@@ -294,6 +329,15 @@ Request::Request(std::string host, std::string port, bool https, std::string pat
 }
 
 Response Request::send() {
+    if (!this->options.use_custom_cookie) {
+        std::string cookie;
+        if (this->cookies) {
+            cookie = this->cookies->getCookieHeader(this->host, this->path, this->https);
+        }
+        if (!cookie.empty()) {
+            this->headers["Cookie"] = cookie;
+        }
+    }
     std::string data;
     data += this->method + " " + this->path + " HTTP/1.1\r\n";
     auto hasBody = this->body && !this->body->isFinished();
@@ -325,7 +369,7 @@ Response Request::send() {
         }
         socket.send("\r\n");
     }
-    return Response(socket);
+    return Response(socket, *this);
 }
 
 void Request::setBody(HttpBody* body) {
@@ -369,7 +413,9 @@ HttpClient::HttpClient(std::string host) {
 }
 
 Request HttpClient::request(std::string path, std::string method) {
-    return Request(this->host, this->port, this->https, path, method, this->headers, this->options);
+    Request req(this->host, this->port, this->https, path, method, this->headers, this->options);
+    req.cookies = this->cookies;
+    return req;
 }
 
 void HttpFullBody::pull() {
@@ -457,12 +503,12 @@ Request::~Request() {
     }
 }
 
-Response::Response(Socket socket): socket(socket) {
+Response::Response(Socket socket, Request& req): socket(socket) {
 #if HAVE_ZLIB
     memset(&this->zstream, 0, sizeof(z_stream));
 #endif
     parseStatus();
-    parseHeader();
+    parseHeader(req);
 }
 
 bool Response::pullData() {
@@ -490,8 +536,7 @@ void Response::parseStatus() {
     this->reason = parts[2];
 }
 
-void Response::parseHeader() {
-    if (!this->code) parseStatus();
+void Response::parseHeader(Request& req) {
     if (this->headerParsed) return;
     this->headerParsed = true;
     auto line = this->readLine();
@@ -537,6 +582,10 @@ void Response::parseHeader() {
 #else
             throw std::runtime_error("Unspported content-encoding");
 #endif
+        } else if (!cstr_stricmp(kv[0].c_str(), "set-cookie")) {
+            if (req.cookies) {
+                req.cookies->handleSetCookie(req, kv[1]);
+            }
         }
         line = this->readLine();
     }
@@ -560,8 +609,6 @@ std::string Response::readLine() {
 }
 
 std::string Response::read() {
-    if (!this->code) this->parseStatus();
-    if (!this->headerParsed) this->parseHeader();
     if (this->chunked) {
         std::string data;
         size_t size = -1;
@@ -701,4 +748,283 @@ HttpBody* Request::getBody() {
 
 bool Response::isEof() {
     return this->eof;
+}
+
+Cookie::Cookie(std::string name, std::string value, std::string domain, std::string path, bool secure, bool httpOnly, int64_t expires) {
+    this->name = name;
+    this->value = value;
+    this->domain = domain;
+    this->path = path;
+    this->secure = secure;
+    this->httpOnly = httpOnly;
+    this->expires = expires;
+}
+
+std::string Cookies::getCookieHeader(std::string host, std::string path, bool https) {
+    std::string re;
+    if (this->cookies.find(host) != this->cookies.end()) {
+        for (auto& cookie : this->cookies[host]) {
+            if (cookie.expires != 0 && cookie.expires < time(nullptr)) {
+                continue;
+            }
+            if (cookie.secure && !https) {
+                continue;
+            }
+            if (!cookie.path.empty() && path.find(cookie.path) != 0) {
+                continue;
+            }
+            if (!re.empty()) {
+                re += "; ";
+            }
+            re += cookie.name + "=" + cookie.value;
+        }
+    }
+    std::string host2 = "." + host;
+    if (this->cookies.find(host2) != this->cookies.end()) {
+        for (auto& cookie : this->cookies[host2]) {
+            if (cookie.expires != 0 && cookie.expires < time(nullptr)) {
+                continue;
+            }
+            if (cookie.secure && !https) {
+                continue;
+            }
+            if (!cookie.path.empty() && path.find(cookie.path) != 0) {
+                continue;
+            }
+            if (!re.empty()) {
+                re += "; ";
+            }
+            re += cookie.name + "=" + cookie.value;
+        }
+    }
+    auto pos = host.find(".");
+    if (pos != std::string::npos) {
+        host = host.substr(pos);
+        if (this->cookies.find(host) != this->cookies.end()) {
+            for (auto& cookie : this->cookies[host]) {
+                if (cookie.expires != 0 && cookie.expires < time(nullptr)) {
+                    continue;
+                }
+                if (cookie.secure && !https) {
+                    continue;
+                }
+                if (!cookie.path.empty() && path.find(cookie.path) != 0) {
+                    continue;
+                }
+                if (!re.empty()) {
+                    re += "; ";
+                }
+                re += cookie.name + "=" + cookie.value;
+            }
+        }
+    }
+    return re;
+}
+
+void Cookies::handleSetCookie(Request& req, std::string set_cookie) {
+    auto list = str_util::str_split(set_cookie, ";");
+    std::string name, value, domain, path;
+    bool secure = false, httpOnly = false;
+    int64_t expires = 0;
+    bool first = true;
+    for (auto& item: list) {
+        auto it = str_util::str_trim(item);
+        auto kv = str_util::str_splitv(it, "=", 2);
+        if (first) {
+            if (kv.size() < 2) throw std::runtime_error("Invalid Set-Cookie: No value");
+            name = kv[0];
+            value = kv[1];
+            first = false;
+        }
+        if (kv.size() < 2) {
+            if (!cstr_stricmp(it.c_str(), "HttpOnly")) {
+                httpOnly = true;
+            } else if (!cstr_stricmp(it.c_str(), "Secure")) {
+                secure = true;
+            }
+        } else {
+            if (!cstr_stricmp(kv[0].c_str(), "Domain")) {
+                domain = kv[1];
+            } else if (!cstr_stricmp(kv[0].c_str(), "Path")) {
+                path = kv[1];
+            } else if (!cstr_stricmp(kv[0].c_str(), "Expires")) {
+                struct tm tm;
+                if (!time_util::strptime(kv[1].c_str(), "%a, %d %b %Y %H:%M:%S GMT", &tm)) {
+                    throw std::runtime_error("Invalid Set-Cookie: Invalid Expires");
+                }
+                expires = time_util::timegm(&tm);
+            } else if (!cstr_stricmp(kv[0].c_str(), "Max-Age")) {
+                int64_t max_age;
+                if (sscanf(kv[1].c_str(), "%" SCNd64, &max_age) != 1) {
+                    throw std::runtime_error("Invalid Set-Cookie: Invalid Max-Age");
+                }
+                expires = time(nullptr) + max_age;
+            }
+        }
+    }
+    if (domain.empty()) {
+        domain = req.host;
+    }
+    if (path.empty()) {
+        path = req.path;
+    }
+    if (this->cookies.find(domain) == this->cookies.end()) {
+        this->cookies[domain] = std::list<Cookie>();
+        this->cookies[domain].push_back(Cookie(name, value, domain, path, secure, httpOnly, expires));
+    } else {
+        bool found = false;
+        for (auto it = this->cookies[domain].begin(); it != this->cookies[domain].end(); it++) {
+            if (it->name == name && it->path == path) {
+                it->value = value;
+                it->domain = domain;
+                it->secure = secure;
+                it->httpOnly = httpOnly;
+                it->expires = expires;
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            this->cookies[domain].push_back(Cookie(name, value, domain, path, secure, httpOnly, expires));
+        }
+    }
+}
+
+NetscapeCookies::NetscapeCookies() {}
+
+NetscapeCookies::NetscapeCookies(std::string path) {
+    this->path = path;
+    this->load();
+}
+
+NetscapeCookies::~NetscapeCookies() {
+    if (this->save_when_disposed) this->save();
+}
+
+bool NetscapeCookies::load() {
+    if (this->path.empty()) return true;
+    if (!fileop::exists(this->path)) return true;
+    int fd;
+    int err = fileop::open(this->path, fd, O_RDONLY | _O_BINARY, _SH_DENYWR, _S_IWRITE | _S_IREAD);
+    if (err < 0) {
+        return false;
+    }
+    FILE* f = fileop::fdopen(fd, "rb");
+    if (!f) {
+        fileop::close(fd);
+        return false;
+    }
+    auto reader = create_file_reader(f, 0);
+    char* line = nullptr;
+    size_t line_size = 0;
+    std::string l;
+    bool re = true;
+    if (file_reader_read_line(reader, &line, &line_size)) {
+        re = false;
+        goto end;
+    }
+    l = std::string(line, line_size);
+    free(line);
+    line = nullptr;
+    while (!l.empty()) {
+        std::string name, value, domain, path;
+        bool secure = false, httpOnly = false;
+        int64_t expires = 0;
+        if (!cstr_strnicmp(l.c_str(), "#HttpOnly_", 10)) {
+            l = l.substr(10);
+            httpOnly = true;
+        }
+        if (l.find("#") == 0) {
+            if (file_reader_read_line(reader, &line, &line_size)) {
+                break;
+            }
+            l = std::string(line, line_size);
+            free(line);
+            line = nullptr;
+            continue;
+        }
+        auto list = str_util::str_splitv(l, "\t", 7);
+        if (list.size() < 7) {
+            re = false;
+            goto end;
+        }
+        domain = list[0];
+        path = list[2];
+        secure = !cstr_stricmp(list[3].c_str(), "TRUE");
+        if (sscanf(list[4].c_str(), "%" SCNd64, &expires) != 1) {
+            re = false;
+            goto end;
+        }
+        name = list[5];
+        value = list[6];
+        if (this->cookies.find(domain) == this->cookies.end()) {
+            this->cookies[domain] = std::list<Cookie>();
+            this->cookies[domain].push_back(Cookie(name, value, domain, path, secure, httpOnly, expires));
+        } else {
+            this->cookies[domain].push_back(Cookie(name, value, domain, path, secure, httpOnly, expires));
+        }
+        if (file_reader_read_line(reader, &line, &line_size)) {
+            break;
+        }
+        l = std::string(line, line_size);
+        free(line);
+        line = nullptr;
+    }
+end:
+    if (reader) free_file_reader(reader);
+    if (f) fileop::fclose(f);
+    if (line) free(line);
+    return re;
+}
+
+bool NetscapeCookies::save() {
+    if (this->path.empty()) return true;
+    int fd;
+    int err = fileop::open(this->path, fd, O_WRONLY | O_CREAT | _O_BINARY, 16, _S_IWRITE | _S_IREAD);
+    if (err < 0) {
+        return false;
+    }
+    FILE* f = fileop::fdopen(fd, "wb");
+    if (!f) {
+        fileop::close(fd);
+        return false;
+    }
+    fprintf(f, "# Netscape HTTP Cookie File\n\
+# http://curl.haxx.se/rfc/cookie_spec.html\n");
+    for (auto& domain : this->cookies) {
+        for (auto& cookie : domain.second) {
+            if (cookie.expires == 0 && cookie.expires < time(nullptr)) {
+                continue;
+            }
+            if (cookie.secure) {
+                fprintf(f, "#HttpOnly_");
+            }
+            fprintf(f, "%s\t%s\t%s\t%s\t%s\t%s\t%s\n", cookie.domain.c_str(), cookie.domain.find(".") == 0 ? "TRUE" : "FALSE", cookie.path.c_str(), cookie.secure ? "TRUE" : "FALSE", std::to_string(cookie.expires).c_str(), cookie.name.c_str(), cookie.value.c_str());
+        }
+    }
+    fileop::fclose(f);
+    return true;
+}
+
+std::map<std::string, std::string> parseCookie(std::string cookie) {
+    std::map<std::string, std::string> re;
+    auto list = str_util::str_split(cookie, ";");
+    for (auto& item : list) {
+        auto kv = str_util::str_splitv(item, "=", 2);
+        if (kv.size() >= 2) {
+            re[str_util::str_trim(kv[0])] = str_util::str_trim(kv[1]);
+        }
+    }
+    return re;
+}
+
+std::string dumpCookie(std::map<std::string, std::string> cookie) {
+    std::string re;
+    for (auto& item : cookie) {
+        if (!re.empty()) {
+            re += "; ";
+        }
+        re += item.first + "=" + item.second;
+    }
+    return re;
 }

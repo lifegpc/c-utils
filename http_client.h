@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <list>
 #include <string>
 #include <map>
 #include <memory>
@@ -33,12 +34,19 @@ struct HeaderNameCompare {
     }
 };
 
+typedef struct Response Response;
+typedef struct Request Request;
+typedef struct Cookie Cookie;
+
 typedef std::map<std::string, std::string, HeaderNameCompare> HeaderMap;
+typedef std::map<std::string, std::list<Cookie>> CookieMap;
 
 std::string decodeURIComponent(std::string str);
+std::string encodeURIComponent(std::string str);
 
 class HttpClientOptions {
 public:
+    bool use_custom_cookie = false;
 };
 
 class HttpBody {
@@ -77,6 +85,43 @@ public:
     void set(std::string key, std::string value);
 protected:
     std::string body();
+};
+
+class CookiesBase {
+public:
+    virtual std::string getCookieHeader(std::string host, std::string path, bool https) = 0;
+    virtual void handleSetCookie(Request& req, std::string set_cookie) = 0;
+};
+
+class Cookie {
+public:
+    Cookie(std::string name, std::string value, std::string domain, std::string path, bool secure, bool httpOnly, int64_t expires);
+    std::string name;
+    std::string value;
+    std::string domain;
+    std::string path;
+    bool secure;
+    bool httpOnly;
+    int64_t expires;
+};
+
+class Cookies: public CookiesBase {
+public:
+    virtual std::string getCookieHeader(std::string host, std::string path, bool https);
+    virtual void handleSetCookie(Request& req, std::string set_cookie);
+protected:
+    CookieMap cookies;
+};
+
+class NetscapeCookies: public Cookies {
+public:
+    NetscapeCookies();
+    NetscapeCookies(std::string path);
+    ~NetscapeCookies();
+    bool load();
+    bool save();
+    bool save_when_disposed = true;
+    std::string path;
 };
 
 class AIException: std::exception {
@@ -132,8 +177,6 @@ private:
     addrinfo* addr = nullptr;
 };
 
-typedef struct Response Response;
-
 class Request {
 public:
     Request(std::string host, std::string port, bool https, std::string path, std::string method, HeaderMap headers, HttpClientOptions options);
@@ -149,6 +192,7 @@ public:
     bool https = false;
     std::string path;
     std::string method;
+    CookiesBase* cookies = nullptr;
 private:
     HttpBody* body = nullptr;
 };
@@ -156,7 +200,7 @@ private:
 class Response {
 public:
     Response() = delete;
-    explicit Response(Socket socket);
+    explicit Response(Socket socket, Request& req);
     ~Response();
     HeaderMap headers;
     uint16_t code = 0;
@@ -166,7 +210,7 @@ public:
     bool isEof();
 private:
     std::string readLine();
-    void parseHeader();
+    void parseHeader(Request& req);
     void parseStatus();
     bool pullData();
     bool headerParsed = false;
@@ -188,10 +232,14 @@ public:
     Request request(std::string path, std::string method);
     HttpClientOptions options;
     HeaderMap headers;
+    CookiesBase* cookies = nullptr;
 private:
     std::string host;
     std::string port;
     bool https = false;
 };
+
+std::map<std::string, std::string> parseCookie(std::string cookie);
+std::string dumpCookie(std::map<std::string, std::string> cookie);
 
 #endif
