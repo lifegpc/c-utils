@@ -63,3 +63,18 @@ time_t time_util::timegm(struct tm* tm) {
     return now + get_timezone();
 #endif
 }
+
+time_t time_util::time_ns() {
+#if _WIN32
+    FILETIME ft;
+    GetSystemTimeAsFileTime(&ft);
+    time_t t = ((size_t)ft.dwHighDateTime << 32) | (size_t)ft.dwLowDateTime;
+    return t;
+#elif HAVE_CLOCK_GETTIME
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    return ts.tv_sec * 1000000000LL + ts.tv_nsec;
+#else
+    return time(NULL) * 1000000000LL;
+#endif
+}

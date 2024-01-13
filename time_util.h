@@ -17,5 +17,6 @@ namespace time_util {
     char* strptime(const char* s, const char* format, struct tm* tm);
     long get_timezone();
     time_t timegm(struct tm* tm);
+    time_t time_ns();
 }
 #endif

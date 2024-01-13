@@ -193,6 +193,7 @@ public:
     std::string path;
     std::string method;
     CookiesBase* cookies = nullptr;
+    std::string toUri();
 private:
     HttpBody* body = nullptr;
 };

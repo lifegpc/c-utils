@@ -1028,3 +1028,18 @@ std::string dumpCookie(std::map<std::string, std::string> cookie) {
     }
     return re;
 }
+
+std::string Request::toUri() {
+    std::string re;
+    if (this->https) {
+        re += "https://";
+    } else {
+        re += "http://";
+    }
+    re += this->host;
+    if (this->port != (this->https ? "https" : "http")) {
+        re += ":" + this->port;
+    }
+    re += this->path;
+    return re;
+}
