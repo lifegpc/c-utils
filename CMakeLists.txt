@@ -95,6 +95,8 @@ if (NOT MSVC)
 endif()
 if (NOT WIN32)
     check_symbol_exists(clock_gettime "time.h" HAVE_CLOCK_GETTIME)
+    check_symbol_exists(usleep "unistd.h" HAVE_USLEEP)
+    check_symbol_exists(nanosleep "time.h" HAVE_NANOSLEEP)
 endif()
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/utils_config.h.in" "${CMAKE_CURRENT_BINARY_DIR}/utils_config.h")
 

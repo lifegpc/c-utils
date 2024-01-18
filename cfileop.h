@@ -11,6 +11,8 @@ extern "C" {
 #include <fcntl.h>
 #if _WIN32
 #include <io.h>
+#else
+#include <unistd.h>
 #endif
 /**
  * @brief Check file exists

@@ -17,6 +17,10 @@
 
 #include "err.h"
 
+#if HAVE_USLEEP
+#include <unistd.h>
+#endif
+
 #if _WIN32
 void time_util::time_t_to_file_time(time_t t, LPFILETIME pft) {
     ULARGE_INTEGER time_value;
@@ -64,11 +68,11 @@ time_t time_util::timegm(struct tm* tm) {
 #endif
 }
 
-time_t time_util::time_ns() {
+size_t time_util::time_ns() {
 #if _WIN32
     FILETIME ft;
     GetSystemTimeAsFileTime(&ft);
-    time_t t = ((size_t)ft.dwHighDateTime << 32) | (size_t)ft.dwLowDateTime;
+    size_t t = ((size_t)ft.dwHighDateTime << 32) | (size_t)ft.dwLowDateTime;
     return t;
 #elif HAVE_CLOCK_GETTIME
     struct timespec ts;
@@ -77,4 +81,29 @@ time_t time_util::time_ns() {
 #else
     return time(NULL) * 1000000000LL;
 #endif
+}
+
+size_t time_time_ns() {
+    return time_util::time_ns();
+}
+
+int time_util::mssleep(unsigned int ms) {
+#if _WIN32
+    Sleep(ms);
+    return 0;
+#elif HAVE_USLEEP
+    return usleep(ms);
+#elif HAVE_NANOSLEEP
+    struct timespec ts;
+    ts.tv_sec = ms / 1000;
+    ts.tv_nsec = (ms % 1000) * 1000000;
+    return nanosleep(&ts, NULL);
+#else
+    printf("mssleep failed: not implemented\n");
+    return -1;
+#endif
+}
+
+int mssleep(unsigned int ms) {
+    return time_util::mssleep(ms);
 }

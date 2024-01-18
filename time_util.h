@@ -5,6 +5,8 @@
 #include <Windows.h>
 #endif
 
+#if __cplusplus
+
 namespace time_util {
 #if _WIN32
     /**
@@ -17,6 +19,18 @@ namespace time_util {
     char* strptime(const char* s, const char* format, struct tm* tm);
     long get_timezone();
     time_t timegm(struct tm* tm);
-    time_t time_ns();
+    size_t time_ns();
+    int mssleep(unsigned int ms);
 }
+
+extern "C" {
+#endif
+
+size_t time_time_ns();
+int mssleep(unsigned int ms);
+
+#if __cplusplus
+}
+#endif
+
 #endif

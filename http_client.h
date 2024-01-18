@@ -8,6 +8,7 @@
 #include <map>
 #include <memory>
 #include <vector>
+#include <string.h>
 #include "cstr_util.h"
 #include "utils_config.h"
 
