@@ -428,7 +428,11 @@ void HttpFullBody::pull() {
 
 size_t HttpFullBody::pullData(char* buf, size_t len) {
     this->pull();
+#ifdef min
+    size_t rlen = min(this->buff.length(), len);
+#else
     size_t rlen = std::min(this->buff.length(), len);
+#endif
     memcpy(buf, this->buff.c_str(), rlen);
     this->buff = this->buff.substr(rlen);
     return rlen;
@@ -620,7 +624,11 @@ std::string Response::read() {
         size_t osize = size;
         while (size > 0) {
             if (this->pullData()) break;
+#ifdef min
+            size_t len = min(this->buff.length(), size);
+#else
             auto len = std::min(this->buff.length(), size);
+#endif
             data += this->buff.substr(0, len);
             this->buff = this->buff.substr(len);
             size -= len;
