@@ -109,3 +109,13 @@ std::string str_util::str_trim(std::string input) {
     }
     return input;
 }
+
+std::string str_util::str_join(std::list<std::string> input, std::string pattern) {
+    std::string output;
+    for (auto i = input.begin(); i != input.end();) {
+        output += *i;
+        i++;
+        if (i != input.end()) output += pattern;
+    }
+    return output;
+}

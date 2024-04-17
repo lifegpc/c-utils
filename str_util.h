@@ -70,5 +70,12 @@ namespace str_util {
      * @return Result
     */
     std::string remove_quote(std::string input);
+    /**
+     * @brief Join a list of string with a pattern
+     * @param input Input list
+     * @param pattern Pattern
+     * @return Result
+    */
+    std::string str_join(std::list<std::string> input, std::string pattern);
 }
 #endif

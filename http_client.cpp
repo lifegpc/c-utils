@@ -527,7 +527,7 @@ bool Response::pullData() {
 void Response::parseStatus() {
     if (this->code) return;
     auto line = this->readLine();
-    auto parts = str_util::str_splitv(line, " ", 3);
+    auto parts = str_util::str_splitv(line, " ");
     if (parts.size() < 3) {
         throw std::runtime_error("Invalid HTTP status line");
     }
@@ -537,7 +537,7 @@ void Response::parseStatus() {
     if (sscanf(parts[1].c_str(), "%" SCNu16, &this->code) != 1) {
         throw std::runtime_error("Invalid HTTP status code");
     }
-    this->reason = parts[2];
+    this->reason = str_util::str_join(std::list(parts.begin() + 2, parts.end()), " ");
 }
 
 void Response::parseHeader(Request& req) {
