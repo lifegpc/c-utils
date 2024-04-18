@@ -537,7 +537,7 @@ void Response::parseStatus() {
     if (sscanf(parts[1].c_str(), "%" SCNu16, &this->code) != 1) {
         throw std::runtime_error("Invalid HTTP status code");
     }
-    this->reason = str_util::str_join(std::list(parts.begin() + 2, parts.end()), " ");
+    this->reason = str_util::str_join(std::list<std::string>(parts.begin() + 2, parts.end()), " ");
 }
 
 void Response::parseHeader(Request& req) {
