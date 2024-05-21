@@ -6,6 +6,10 @@
 #include <fcntl.h>
 #if _WIN32
 #include <Windows.h>
+#else
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
 #endif
 
 #include "cstr_util.h"
