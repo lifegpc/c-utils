@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include "circular_queue.h"
+#include "linked_queue.h"
 #include <string>
 
 TEST(Queue_Test, CircularQueue1) {
@@ -80,4 +81,27 @@ TEST(Queue_Test, CircularQueue2) {
     });
     EXPECT_EQ(text, "2,3,4,5");
     free_circular_queue(queue);
+}
+
+TEST(Queue_Test, LinkedQueue1) {
+    struct LinkedQueue<int> queue;
+    queue.front = nullptr;
+    queue.rear = nullptr;
+    EXPECT_EQ(linked_queue_push(queue, 3), true);
+    EXPECT_EQ(linked_queue_push(queue, 4), true);
+    EXPECT_EQ(linked_queue_push(queue, 9), true);
+    int v;
+    EXPECT_EQ(linked_queue_pop(queue, v), true);
+    EXPECT_EQ(v, 3);
+    EXPECT_EQ(linked_queue_push(queue, 7), true);
+    EXPECT_EQ(linked_queue_length(queue), 3);
+    std::string text = "";
+    linked_queue_iter(queue, [&text](int ele) {
+        if (!text.empty()) {
+            text += ",";
+        }
+        text += std::to_string(ele);
+    });
+    EXPECT_EQ(text, "4,9,7");
+    free_linked_queue(queue);
 }
