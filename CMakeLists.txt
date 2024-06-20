@@ -6,6 +6,7 @@ option(ENABLE_CXX17 "Enable C++ 17" OFF)
 option(INSTALL_DEP_FILES "Install a file with dependences." OFF)
 option(ENABLE_SSL "Enable SSL" OFF)
 option(ENABLE_ZLIB "Use Zlib to uncompress http data." OFF)
+option(ENABLE_UTILS_TESTING "Test utils with GTest." OFF)
 
 if (ENABLE_STANDALONE)
     project(utils)
@@ -142,6 +143,8 @@ set(SOURCE_FILE_HEADERS
     file_reader.h
     urlparse.h
     http_client.h
+    stack.h
+    linked_stack.h
 )
 
 if (NOT HAVE_STRPTIME)
@@ -184,4 +187,15 @@ if (INSTALL_DEP_FILES)
         file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/utils_dep.txt" "${OUT}")
         install(FILES "${CMAKE_CURRENT_BINARY_DIR}/utils_dep.txt" DESTINATION ${CMAKE_INSTALL_PREFIX})
     endif()
+endif()
+
+if (ENABLE_UTILS_TESTING)
+    # For Windows: Prevent overriding the parent project's compiler/linker settings
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    add_subdirectory(googletest)
+    enable_testing()
+    add_executable(stack_test test/stack_test.cpp)
+    target_link_libraries(stack_test GTest::gtest_main utils)
+    include(GoogleTest)
+    gtest_discover_tests(stack_test)
 endif()
