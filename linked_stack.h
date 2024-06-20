@@ -37,7 +37,7 @@ void linked_stack_clear(struct LinkedStack<T>*& top, std::function<void(T)> free
 }
 
 template <typename T, class F>
-void linked_stack_clear(struct LinkedStack<T>*& top, F free_func) {
+inline void linked_stack_clear(struct LinkedStack<T>*& top, F free_func) {
     linked_stack_clear(top, std::function<void(T)>(free_func));
 }
 
@@ -74,7 +74,7 @@ void linked_stack_iter(struct LinkedStack<T>* top, std::function<void(T, Args...
 }
 
 template <typename T, class F, typename ... Args>
-void linked_stack_iter(struct LinkedStack<T>* top, F callback, Args... args) {
+inline void linked_stack_iter(struct LinkedStack<T>* top, F callback, Args... args) {
     linked_stack_iter(top, std::function<void(T, Args...)>(callback), args...);
 }
 

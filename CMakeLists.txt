@@ -145,6 +145,7 @@ set(SOURCE_FILE_HEADERS
     http_client.h
     stack.h
     linked_stack.h
+    circular_queue.h
 )
 
 if (NOT HAVE_STRPTIME)
@@ -194,8 +195,8 @@ if (ENABLE_UTILS_TESTING)
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
     add_subdirectory(googletest)
     enable_testing()
-    add_executable(stack_test test/stack_test.cpp)
-    target_link_libraries(stack_test GTest::gtest_main utils)
+    add_executable(unittest test/stack_test.cpp test/queue_test.cpp)
+    target_link_libraries(unittest GTest::gtest_main utils)
     include(GoogleTest)
-    gtest_discover_tests(stack_test)
+    gtest_discover_tests(unittest)
 endif()
