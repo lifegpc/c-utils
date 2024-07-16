@@ -17,6 +17,12 @@ struct LinkedQueue {
 };
 
 template <typename T>
+void linked_queue_init(struct LinkedQueue<T>& queue) {
+    queue.front = nullptr;
+    queue.rear = nullptr;
+}
+
+template <typename T>
 size_t linked_queue_length(struct LinkedQueue<T>& queue) {
     if (!queue.front) return 0;
     struct LinkedQueueNode<T>* node = queue.front;

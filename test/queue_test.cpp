@@ -85,8 +85,7 @@ TEST(Queue_Test, CircularQueue2) {
 
 TEST(Queue_Test, LinkedQueue1) {
     struct LinkedQueue<int> queue;
-    queue.front = nullptr;
-    queue.rear = nullptr;
+    linked_queue_init(queue);
     EXPECT_EQ(linked_queue_push(queue, 3), true);
     EXPECT_EQ(linked_queue_push(queue, 4), true);
     EXPECT_EQ(linked_queue_push(queue, 9), true);
@@ -104,4 +103,21 @@ TEST(Queue_Test, LinkedQueue1) {
     });
     EXPECT_EQ(text, "4,9,7");
     free_linked_queue(queue);
+}
+
+TEST(Queue_Test, LinkedQueue2) {
+    struct LinkedQueue<int> queue;
+    linked_queue_init(queue);
+    EXPECT_EQ(linked_queue_push(queue, 3), true);
+    EXPECT_EQ(linked_queue_push(queue, 4), true);
+    EXPECT_EQ(linked_queue_push(queue, 9), true);
+     int v;
+    EXPECT_EQ(linked_queue_pop(queue, v), true);
+    EXPECT_EQ(v, 3);
+    EXPECT_EQ(linked_queue_pop(queue, v), true);
+    EXPECT_EQ(linked_queue_pop(queue, v), true);
+    EXPECT_EQ(linked_queue_pop(queue, v), false);
+    EXPECT_EQ(v, 9);
+    EXPECT_EQ(queue.front, nullptr);
+    EXPECT_EQ(queue.rear, nullptr);
 }
