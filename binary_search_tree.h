@@ -152,7 +152,7 @@ inline void binary_search_tree_iter(BinarySearchTree<K, V>* root, F callback, Ar
 }
 
 template <typename K, typename V>
-BinarySearchTree<K, V>* binary_search_tree_insert(BinarySearchTree<K, V>*& root, K key, V value, std::function<int(K, K)> comp, std::function<void(K)> free_key = std::function<void(K)>(), std::function<void(V)> free_value = std::function<void(V)>()) {
+BinarySearchTree<K, V>* binary_search_tree_insert(BinarySearchTree<K, V>*& root, K key, V value, std::function<int(K, K)> comp, std::function<void(K)> free_key = std::function<void(K)>(), std::function<void(V)> free_value = std::function<void(V)>(), bool noupdate = false) {
     if (!root) {
         root = binary_tree_new<BinarySearchTreePair<K, V>>({ key, value });
         if (!root) {
@@ -173,9 +173,9 @@ BinarySearchTree<K, V>* binary_search_tree_insert(BinarySearchTree<K, V>*& root,
         re = comp(key, cur->data.key);
     }
     if (re == 0) {
-        if (free_value) free_value(cur->data.value);
+        if (free_value && !noupdate) free_value(cur->data.value);
         if (free_key) free_key(key);
-        cur->data.value = value;
+        if (!noupdate) cur->data.value = value;
         return cur;
     }
     BinarySearchTree<K, V>* node = binary_tree_new<BinarySearchTreePair<K, V>>({key, value});
@@ -221,6 +221,18 @@ public:
     }
     template <class F, class G>
     BinarySearchMap(F free_key, G free_value = std::function<void(V)>(), Compare cmp = Compare()) : BinarySearchMap(std::function<void(K)>(free_key), std::function<void(V)>(free_value), cmp) {}
+    BinarySearchMap(const BinarySearchMap& other) {
+        tree = binary_tree_clone(other.tree, [&other](BinarySearchTreePair<K, V> e) {
+            if (other.free_key_func) other.free_key_func(e.key);
+            if (other.free_value_func) other.free_value_func(e.value);
+        });
+        if (!tree) {
+            throw std::runtime_error("Failed to clone map.");
+        }
+        comp_func = other.comp_func;
+        free_key_func = other.free_key_func;
+        free_value_func = other.free_value_func;
+    }
     ~BinarySearchMap() {
         clear();
     }
@@ -229,6 +241,9 @@ public:
     }
     bool inline del(K key, V* deleted_value = nullptr) {
         return binary_search_tree_delete(tree, key, deleted_value, comp_func, free_key_func, free_value_func);
+    }
+    bool inline get(K key, V& value) const {
+        return binary_search_tree_get(tree, key, value, comp_func);
     }
     bool inline get(K key, V& value) {
         return binary_search_tree_get(tree, key, value, comp_func);
@@ -244,15 +259,18 @@ public:
     void inline iter(F callback, Args... args) {
         return binary_search_tree_iter(tree, std::function<void(K, V, Args...)>(callback), args...);
     }
-    V& operator[](K key) {
+    const V& operator[](K key) const {
         BinarySearchTree<K, V>* node = binary_search_tree_get_node(tree, key, comp_func);
         if (!node) {
-            V tmp;
-            BinarySearchTree<K, V>* node = binary_search_tree_insert(tree, key, tmp, comp_func, free_key_func, free_value_func);
-            if (!node) {
-                throw std::runtime_error("Failed to insert new node");
-            }
-            return node->data.value;
+            throw std::runtime_error("No such node.");
+        }
+        return node->data.value;
+    }
+    V& operator[](K key) {
+        V tmp = V();
+        BinarySearchTree<K, V>* node = binary_search_tree_insert(tree, key, tmp, comp_func, free_key_func, free_value_func, true);
+        if (!node) {
+            throw std::runtime_error("Failed to insert new node.");
         }
         return node->data.value;
     }

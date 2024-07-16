@@ -160,4 +160,12 @@ TEST(BinaryTreeTest, BinarySearchTree3) {
     });
     GTEST_ASSERT_EQ(keys, "10,30,33");
     GTEST_ASSERT_EQ(values, "20,40,44");
+    GTEST_ASSERT_EQ(map[20], 0);
+    const BinarySearchMap map2(map);
+    map[20] = 33;
+    GTEST_ASSERT_EQ(map2[20], 0);
+    GTEST_ASSERT_EQ(map[20], 33);
+    int j;
+    GTEST_ASSERT_EQ(map2.get(33, j), true);
+    GTEST_ASSERT_EQ(j, 44);
 }

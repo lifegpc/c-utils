@@ -32,6 +32,32 @@ inline void binary_tree_clear(struct BinaryTree<T>*& top, F free_func) {
     binary_tree_clear(top, std::function<void(T)>(free_func));
 }
 
+template <typename T>
+struct BinaryTree<T>* binary_tree_clone(struct BinaryTree<T>* tree, std::function<void(T)> free_func = std::function<void(T)>()) {
+    if (!tree) return nullptr;
+    T newdata(tree->data);
+    struct BinaryTree<T>* now = binary_tree_new(newdata);
+    if (now) {
+        if (tree->left) {
+            now->left = binary_tree_clone(tree->left, free_func);
+            if (!now->left) goto end;
+        }
+        if (tree->right) {
+            now->right = binary_tree_clone(tree->right, free_func);
+            if (!now->right) goto end;
+        }
+    }
+    return now;
+end:
+    binary_tree_clear(now, free_func);
+    return now;
+}
+
+template <typename T, class F>
+inline struct BinaryTree<T>* binary_tree_clone(struct BinaryTree<T>* tree, F free_func) {
+    return binary_tree_clone(tree, std::function<void(T)>(free_func));
+}
+
 template <typename T, typename... Args>
 void binary_tree_dfs(struct BinaryTree<T>* top, std::function<void(struct BinaryTree<T>*, Args...)> callback, Args... args) {
     if (!top) return;
