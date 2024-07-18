@@ -31,7 +31,14 @@ TEST(HashMapTest, HashMap) {
     GTEST_ASSERT_EQ(hash_map_get_entry(map, "123")->value, 123);
     int v = 0;
     GTEST_ASSERT_TRUE(hash_map_get(map, "234", v));
+    GTEST_ASSERT_FALSE(hash_map_get(map, "333", v));
+    GTEST_ASSERT_FALSE(hash_map_get_entry(map, "333"));
     GTEST_ASSERT_EQ(v, 234);
+    GTEST_ASSERT_TRUE(hash_map_insert(map, "2222", 2222));
+    GTEST_ASSERT_TRUE(hash_map_get_entry(map, "2222"));
+    GTEST_ASSERT_TRUE(hash_map_delete(map, "2222", &v));
+    GTEST_ASSERT_EQ(v, 2222);
+    GTEST_ASSERT_FALSE(hash_map_get_entry(map, "2222"));
     free_hash_map(map);
 }
 

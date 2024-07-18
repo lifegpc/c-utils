@@ -111,6 +111,29 @@ void hash_map_clear(struct hash_map<K, V>* map, bool shrink = true) {
 }
 
 template <typename K, typename V>
+bool hash_map_delete(struct hash_map<K, V>* map, K key, V* deleted_value = nullptr) {
+    if (!map) return false;
+    size_t h = map->hash(key);
+    size_t loc = h % map->cap;
+    size_t i = 1;
+    while (map->map[loc] && map->map[loc]->key != key) {
+        loc = (h + map->probing(i++)) % map->cap;
+    }
+    if (!map->map[loc]) return false;
+    if (deleted_value) *deleted_value = map->map[loc]->value;
+    if (map->free_key) map->free_key(map->map[loc]->key);
+    if (!deleted_value && map->free_value) map->free_value(map->map[loc]->value);
+    delete map->map[loc];
+    map->map[loc] = nullptr;
+    return true;
+}
+
+template <typename K, typename V, class X>
+inline bool hash_map_delete(struct hash_map<K, V>* map, X key, V* deleted_value = nullptr) {
+    return hash_map_delete(map, K(key), deleted_value);
+}
+
+template <typename K, typename V>
 struct hash_map_entry<K, V>* hash_map_get_entry(struct hash_map<K, V>* map, K key) {
     if (!map) return nullptr;
     size_t h = map->hash(key);
@@ -136,6 +159,7 @@ bool hash_map_get(struct hash_map<K, V>* map, K key, V& value) {
     while (map->map[loc] && map->map[loc]->key != key) {
         loc = (h + map->probing(i++)) % map->cap;
     }
+    if (!map->map[loc]) return false;
     value = map->map[loc]->value;
     return true;
 }
