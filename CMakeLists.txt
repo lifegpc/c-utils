@@ -148,6 +148,10 @@ set(SOURCE_FILE_HEADERS
     circular_queue.h
     binary_tree.h
     binary_search_tree.h
+    utils_static.h
+    utils_static.cpp
+    hash_map.h
+    hash_map.cpp
 )
 
 if (NOT HAVE_STRPTIME)
@@ -197,7 +201,8 @@ if (ENABLE_UTILS_TESTING)
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
     add_subdirectory(googletest)
     enable_testing()
-    add_executable(unittest test/stack_test.cpp test/queue_test.cpp test/binary_tree_test.cpp)
+    add_executable(unittest test/stack_test.cpp test/queue_test.cpp test/binary_tree_test.cpp
+    test/hash_map_test.cpp)
     target_link_libraries(unittest GTest::gtest_main utils)
     include(GoogleTest)
     gtest_discover_tests(unittest)
