@@ -9,7 +9,7 @@ size_t hash_map_get_next_cap(size_t cap) {
 }
 
 std::function<size_t(size_t)> hash_map_linear_probing(size_t interval) {
-    return std::function([interval](size_t i) {
+    return std::function<size_t(size_t)>([interval](size_t i) {
         return i * interval;
     });
 }
