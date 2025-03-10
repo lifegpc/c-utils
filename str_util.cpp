@@ -30,6 +30,18 @@ bool str_util::touppercase(std::string ori, std::string& result) {
     }
 }
 
+std::string str_util::tolower(std::string ori) {
+    std::string result;
+    tolowercase(ori, result);
+    return result;
+}
+
+std::string str_util::toupper(std::string ori) {
+    std::string result;
+    touppercase(ori, result);
+    return result;
+}
+
 std::string str_util::str_replace(std::string input, std::string pattern, std::string new_content) {
     auto loc = input.find(pattern, 0);
     auto len = pattern.length();

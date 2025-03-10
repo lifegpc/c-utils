@@ -419,7 +419,6 @@ bool fileop::mkdirs(std::string path, int mode, bool allow_exists) {
 }
 
 bool fileop::get_file_size(std::string path, size_t& size) {
-    if (!exists(path)) return false;
 #if _WIN32
     UINT cp[] = { CP_UTF8, CP_OEMCP, CP_ACP };
     int i;
@@ -544,4 +543,127 @@ int fileop::fcloseall() {
 #else
     return 0;
 #endif
+}
+
+std::string fileop::relpath(std::string path, std::string start) {
+    // 如果 start 为空，使用当前目录
+    if (start.empty()) {
+        start = ".";
+    }
+
+    // 将 Windows 风格的路径分隔符统一转换为 '/'
+    auto normalize_path = [](std::string& p) {
+        std::string result = p;
+        for (auto& c : result) {
+            if (c == '\\') c = '/';
+        }
+        // 确保路径末尾没有斜杠
+        if (!result.empty() && result.back() == '/') {
+            result.pop_back();
+        }
+        return result;
+    };
+
+    std::string norm_path = normalize_path(path);
+    std::string norm_start = normalize_path(start);
+
+    // 如果两个路径相同，返回当前目录
+    if (norm_path == norm_start) {
+        return ".";
+    }
+
+    // 如果 path 是绝对路径但 start 不是，或者反之，无法计算相对路径
+#ifdef _WIN32
+    bool path_is_abs = isabs(path);
+    bool start_is_abs = isabs(start);
+    
+    // 在 Windows 上，还要检查驱动器号是否相同
+    if (path_is_abs && start_is_abs) {
+        if (norm_path.length() >= 2 && norm_start.length() >= 2) {
+            // 如果驱动器号不同，无法计算相对路径
+            if (tolower(norm_path[0]) != tolower(norm_start[0]) || norm_path[1] != ':') {
+                return path; // 返回原路径
+            }
+        }
+    }
+#else
+    bool path_is_abs = !norm_path.empty() && norm_path[0] == '/';
+    bool start_is_abs = !norm_start.empty() && norm_start[0] == '/';
+#endif
+
+    if (path_is_abs != start_is_abs) {
+        return path; // 无法计算相对路径，返回原路径
+    }
+
+    // 分割路径为组件
+    auto split_path = [](const std::string& p) {
+        std::vector<std::string> components;
+        std::string::size_type start = 0;
+        std::string::size_type end = 0;
+
+        while ((end = p.find('/', start)) != std::string::npos) {
+            if (end != start) {
+                components.push_back(p.substr(start, end - start));
+            }
+            start = end + 1;
+        }
+
+        if (start < p.length()) {
+            components.push_back(p.substr(start));
+        }
+
+        return components;
+    };
+
+    auto path_components = split_path(norm_path);
+    auto start_components = split_path(norm_start);
+
+    // 找到公共前缀
+    size_t i = 0;
+    while (i < path_components.size() && i < start_components.size()) {
+#ifdef _WIN32
+        // Windows 路径不区分大小写
+        if (str_util::tolower(path_components[i]) != str_util::tolower(start_components[i])) {
+            break;
+        }
+#else
+        if (path_components[i] != start_components[i]) {
+            break;
+        }
+#endif
+        i++;
+    }
+
+    // 构建相对路径
+    std::string result;
+    
+    // 添加 ".." 以表示上级目录
+    for (size_t j = i; j < start_components.size(); j++) {
+        if (!result.empty()) {
+            result += "/";
+        }
+        result += "..";
+    }
+
+    // 添加目标路径的非共享部分
+    for (size_t j = i; j < path_components.size(); j++) {
+        if (!result.empty()) {
+            result += "/";
+        }
+        result += path_components[j];
+    }
+
+    // 如果结果为空，表示当前目录
+    if (result.empty()) {
+        return ".";
+    }
+
+#ifdef _WIN32
+    // 在 Windows 上，将斜杠转换回反斜杠
+    for (auto& c : result) {
+        if (c == '/') c = '\\';
+    }
+#endif
+
+    return result;
 }

@@ -19,6 +19,8 @@ namespace str_util {
      * @return true if successed.
     */
     bool touppercase(std::string ori, std::string& result);
+    std::string tolower(std::string ori);
+    std::string toupper(std::string ori);
     /**
      * @brief Replace all pattern to new_content
      * @param input Input string

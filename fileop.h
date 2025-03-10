@@ -175,5 +175,12 @@ namespace fileop {
      * @return 0(>=0) succeed. EOF error happened.
     */
     int fcloseall();
+    /**
+     * @brief Return a relative path
+     * @param path Path
+     * @param start Start path
+     * @return Result
+     */
+    std::string relpath(std::string path, std::string start = "");
 }
 #endif
