@@ -45,6 +45,10 @@ bool exists_internal(wchar_t* fn) {
     return !_waccess(fn, 0);
 }
 
+FILE* fopen_internal(wchar_t* fn, const wchar_t* mode) {
+    return _wfopen(fn, mode);
+}
+
 bool remove_internal(wchar_t* fn, bool print_error) {
     int ret = _wremove(fn);
     if (ret && print_error && errno != ENOENT) {
@@ -666,4 +670,21 @@ std::string fileop::relpath(std::string path, std::string start) {
 #endif
 
     return result;
+}
+
+FILE* fileop::fopen(std::string path, std::string mode) {
+#if _WIN32
+    std::wstring wMode;
+    if (wchar_util::str_to_wstr(wMode, mode, CP_UTF8)) {
+        UINT cp[] = { CP_UTF8, CP_OEMCP, CP_ACP };
+        int i;
+        for (i = 0; i < 3; i++) {
+            auto f = fileop_internal<FILE*>(path.c_str(), cp[i], &fopen_internal, nullptr, wMode.c_str());
+            if (f) return f;
+        }
+    }
+    return ::fopen(path.c_str(), mode.c_str());
+#else
+    return ::fopen(path.c_str(), mode.c_str());
+#endif
 }

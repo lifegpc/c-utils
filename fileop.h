@@ -182,5 +182,6 @@ namespace fileop {
      * @return Result
      */
     std::string relpath(std::string path, std::string start = "");
+    FILE* fopen(std::string path, std::string mode);
 }
 #endif
