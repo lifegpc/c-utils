@@ -131,3 +131,12 @@ std::string str_util::str_join(std::list<std::string> input, std::string pattern
     }
     return output;
 }
+
+bool str_util::parse_bool(std::string input) {
+    input = tolower(input);
+    if (input == "true" || input == "yes" || input == "on" || input == "1") {
+        return true;
+    } else {
+        return false;
+    }
+}

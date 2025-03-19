@@ -79,5 +79,11 @@ namespace str_util {
      * @return Result
     */
     std::string str_join(std::list<std::string> input, std::string pattern);
+    /**
+     * @brief Parse a string to a boolean
+     * @param input Input string
+     * @return Result
+     */
+    bool parse_bool(std::string input);
 }
 #endif
