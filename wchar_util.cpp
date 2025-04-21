@@ -72,8 +72,8 @@ unsigned long wchar_util::getWideCharToMultiByteOptions(const unsigned long ori_
     return ori_options;
 }
 
-bool wchar_util::str_to_wstr(std::wstring& out, std::string inp, unsigned int cp) {
-    DWORD opt = getMultiByteToWideCharOptions(MB_ERR_INVALID_CHARS, cp);
+bool wchar_util::str_to_wstr(std::wstring& out, std::string inp, unsigned int cp, unsigned long options) {
+    DWORD opt = getMultiByteToWideCharOptions(options, cp);
     int wlen = MultiByteToWideChar(cp, opt, inp.c_str(), inp.length(), nullptr, 0);
     if (!wlen) {
         return false;
@@ -91,8 +91,8 @@ bool wchar_util::str_to_wstr(std::wstring& out, std::string inp, unsigned int cp
     return true;
 }
 
-bool wchar_util::wstr_to_str(std::string& out, std::wstring inp, unsigned int cp) {
-    DWORD opt = getWideCharToMultiByteOptions(WC_ERR_INVALID_CHARS, cp);
+bool wchar_util::wstr_to_str(std::string& out, std::wstring inp, unsigned int cp, unsigned long options) {
+    DWORD opt = getWideCharToMultiByteOptions(options, cp);
     int len = WideCharToMultiByte(cp, opt, inp.c_str(), inp.length(), nullptr, 0, nullptr, nullptr);
     if (!len) {
         return false;

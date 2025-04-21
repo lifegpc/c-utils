@@ -1,6 +1,7 @@
 #ifndef _UTIL_WCHAR_UTIL_H
 #define _UTIL_WCHAR_UTIL_H
 #include<string>
+#include <Windows.h>
 
 namespace wchar_util {
 #if _WIN32
@@ -25,7 +26,7 @@ namespace wchar_util {
      * @param cp Code page of input string
      * @returns true if successed
     */
-    bool str_to_wstr(std::wstring& out, std::string inp, unsigned int cp);
+    bool str_to_wstr(std::wstring& out, std::string inp, unsigned int cp, unsigned long options = MB_ERR_INVALID_CHARS);
     /**
      * @brief Convert wstring to string
      * @param out Output string
@@ -33,7 +34,7 @@ namespace wchar_util {
      * @param cp Code page of output string
      * @returns true if successed
     */
-    bool wstr_to_str(std::string& out, std::wstring inp, unsigned int cp);
+    bool wstr_to_str(std::string& out, std::wstring inp, unsigned int cp, unsigned long options = WC_ERR_INVALID_CHARS);
     /**
      * @brief Get unicode version argv by using win api
      * @param argv Result argv (need free memory by calling freeArgv.
