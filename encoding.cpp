@@ -14,7 +14,7 @@
 #include <Windows.h>
 #endif
 
-#ifdef HAVE_SSCANF_S
+#if HAVE_SSCANF_S
 #define sscanf sscanf_s
 #endif
 

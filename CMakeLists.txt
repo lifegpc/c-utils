@@ -123,6 +123,8 @@ set(SOURCE_FILE
     file_reader.c
     urlparse.cpp
     http_client.cpp
+    utils_static.cpp
+    hash_map.cpp
 )
 set(SOURCE_FILE_HEADERS
     cfileop.h
@@ -149,9 +151,7 @@ set(SOURCE_FILE_HEADERS
     binary_tree.h
     binary_search_tree.h
     utils_static.h
-    utils_static.cpp
     hash_map.h
-    hash_map.cpp
 )
 
 if (NOT HAVE_STRPTIME)

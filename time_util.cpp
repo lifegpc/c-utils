@@ -7,7 +7,7 @@
 
 #include <stdio.h>
 
-#ifndef HAVE_STRPTIME
+#if !HAVE_STRPTIME
 #include "strptime/strptime.h"
 #endif
 
