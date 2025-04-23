@@ -1,7 +1,9 @@
 #ifndef _UTIL_WCHAR_UTIL_H
 #define _UTIL_WCHAR_UTIL_H
 #include<string>
+#if _WIN32
 #include <Windows.h>
+#endif
 
 namespace wchar_util {
 #if _WIN32

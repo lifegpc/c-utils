@@ -3,10 +3,6 @@
 #include <malloc.h>
 #include <string.h>
 
-#if _WIN32
-#include <Windows.h>
-#endif
-
 bool stringToChar(std::string input, char*& output) {
     auto sz = input.size();
     auto s = (char*)malloc(sz + 1);
