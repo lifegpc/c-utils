@@ -154,7 +154,7 @@ endif
 
 source_file += source_file_headers
 
-static_library('utils', 
+utils = static_library('utils', 
     source_file,
     dependencies: deps,
     install: get_option('utils_standalone'),
@@ -162,6 +162,7 @@ static_library('utils',
     cpp_args: ['-DHAVE_UTILS_CONFIG_H'],
     pic: true,
 )
+utils_dep = declare_dependency(include_directories: include_directories('.'), link_with: utils)
 
 if get_option('utils_standalone')
     install_headers(source_file_headers)
