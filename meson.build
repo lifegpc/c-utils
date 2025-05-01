@@ -115,6 +115,7 @@ source_file = files([
     'http_client.cpp',
     'utils_static.cpp',
     'hash_map.cpp',
+    'reg_util.cpp',
 ])
 
 source_file_headers = files([
@@ -143,6 +144,7 @@ source_file_headers = files([
     'binary_search_tree.h',
     'utils_static.h',
     'hash_map.h',
+    'reg_util.h',
 ])
 
 if conf.get('HAVE_STRPTIME') == 0

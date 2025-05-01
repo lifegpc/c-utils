@@ -125,6 +125,7 @@ set(SOURCE_FILE
     http_client.cpp
     utils_static.cpp
     hash_map.cpp
+    reg_util.cpp
 )
 set(SOURCE_FILE_HEADERS
     cfileop.h
@@ -152,6 +153,7 @@ set(SOURCE_FILE_HEADERS
     binary_search_tree.h
     utils_static.h
     hash_map.h
+    reg_util.h
 )
 
 if (NOT HAVE_STRPTIME)
