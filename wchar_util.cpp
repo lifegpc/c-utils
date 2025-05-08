@@ -158,4 +158,23 @@ bool wchar_util::getArgv(char**& argv, int& argc) {
 void wchar_util::freeArgv(char** argv, int argc) {
     freePointerList<char*>(argv, argc, nullptr);
 }
+
+bool wchar_util::getArgv(std::vector<std::string>& argv) {
+    auto cmd = GetCommandLineW();
+    int argcw = 0;
+    auto argvw = CommandLineToArgvW(cmd, &argcw);
+    if (!argvw) return false;
+    bool ret = true;
+    for (int i = 0; i < argcw; i++) {
+        std::wstring s = argvw[i];
+        std::string r;
+        if (!wchar_util::wstr_to_str(r, s, CP_UTF8)) {
+            ret = false;
+            break;
+        }
+        argv.push_back(r);
+    }
+    LocalFree(argvw);
+    return ret;
+}
 #endif

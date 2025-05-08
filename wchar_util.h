@@ -1,6 +1,7 @@
 #ifndef _UTIL_WCHAR_UTIL_H
 #define _UTIL_WCHAR_UTIL_H
-#include<string>
+#include <string>
+#include <vector>
 #if _WIN32
 #include <Windows.h>
 #endif
@@ -45,6 +46,7 @@ namespace wchar_util {
     */
     bool getArgv(char**& argv, int& argc);
     void freeArgv(char** argv, int argc);
+    bool getArgv(std::vector<std::string>& argv);
 #endif
 }
 #endif
