@@ -24,3 +24,21 @@ TEST(HashLibTest, SHA512_256Test) {
     GTEST_ASSERT_EQ(hashHex<SHA512_256>(""), "c672b8d1ef56ed28ab87c3622c5114069bdd3ad7b8f9737498d0c01ecef0967a");
     GTEST_ASSERT_EQ(hashHex<SHA512_256>("随便来一些中文。测试超过一百二十八字节时的状况。用于测试是否存在问题。还是不够长呢。啊啊啊。"), "4b4c7d22f53f567031db0d4b5751f193a305a765aa16257ef568644891016b7e");
 }
+
+TEST(HashLibTest, SHA384Test) {
+    GTEST_ASSERT_EQ(hashHex<SHA384>(""), "38b060a751ac96384cd9327eb1b1e36a21fdb71114be07434c0cc7bf63f6e1da274edebfe76f65fbd51ad2f14898b95b");
+    GTEST_ASSERT_EQ(hashHex<SHA384>("Hello, World!"), "5485cc9b3365b4305dfb4e8337e0a598a574f8242bf17289e0dd6c20a3cd44a089de16ab4ab308f63e44b1170eb5f515");
+    GTEST_ASSERT_EQ(hashHex<SHA384>("随便来一些中文。测试超过一百二十八字节时的状况。用于测试是否存在问题。还是不够长呢。啊啊啊。"), "7123f09157c136ca767487c1316aa1234328f4a4c4749228f3b622f2a6a5964a0142cc90bbc868db7b32cb2652cc3263");
+}
+
+TEST(HashLibTest, SHA256Test) {
+    GTEST_ASSERT_EQ(hashHex<SHA256>(""), "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+    GTEST_ASSERT_EQ(hashHex<SHA256>("Hello, World!"), "dffd6021bb2bd5b0af676290809ec3a53191dd81c7f70a4b28688a362182986f");
+    GTEST_ASSERT_EQ(hashHex<SHA256>("随便来一些中文。测试超过一百二十八字节时的状况。用于测试是否存在问题。还是不够长呢。啊啊啊。"), "29388dd3cd53f3921b3b842e1583980ef2e07a9a48262362decc5870b03fbf6d");
+}
+
+TEST(HashLibTest, SHA224Test) {
+    GTEST_ASSERT_EQ(hashHex<SHA224>(""), "d14a028c2a3a2bc9476102bb288234c415a2b01f828ea62ac5b3e42f");
+    GTEST_ASSERT_EQ(hashHex<SHA224>("Hello, World!"), "72a23dfa411ba6fde01dbfabf3b00a709c93ebf273dc29e2d8b261ff");
+    GTEST_ASSERT_EQ(hashHex<SHA224>("随便来一些中文。测试超过一百二十八字节时的状况。用于测试是否存在问题。还是不够长呢。啊啊啊。"), "6dc50e486071b01bf45d5d228207e9c0a8254e1cc48c88b989f8527d");
+}

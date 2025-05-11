@@ -5,6 +5,10 @@
 #define SHA512_DIGEST_LENGTH 64
 #define SHA512_BLOCK_SIZE 128
 #define SHA512_256_DIGEST_LENGTH 32
+#define SHA384_DIGEST_LENGTH 48
+#define SHA256_DIGEST_LENGTH 32
+#define SHA256_BLOCK_SIZE 64
+#define SHA224_DIGEST_LENGTH 28
 
 using namespace hash_lib;
 
@@ -410,4 +414,187 @@ void SHA512_256::_initState() {
     stateLo[5] = 0x53863992;
     stateLo[6] = 0x2c85b8aa;
     stateLo[7] = 0x81c52ca2;
+}
+
+SHA384::SHA384() {
+    this->reset();
+}
+
+int SHA384::digestLength() {
+    return SHA384_DIGEST_LENGTH; // SHA-384 produces a 384-bit hash value (48 bytes)
+}
+
+void SHA384::_initState() {
+    stateHi[0] = 0xcbbb9d5d;
+    stateHi[1] = 0x629a292a;
+    stateHi[2] = 0x9159015a;
+    stateHi[3] = 0x152fecd8;
+    stateHi[4] = 0x67332667;
+    stateHi[5] = 0x8eb44a87;
+    stateHi[6] = 0xdb0c2e0d;
+    stateHi[7] = 0x47b5481d;
+    stateLo[0] = 0xc1059ed8;
+    stateLo[1] = 0x367cd507;
+    stateLo[2] = 0x3070dd17;
+    stateLo[3] = 0xf70e5939;
+    stateLo[4] = 0xffc00b31;
+    stateLo[5] = 0x68581511;
+    stateLo[6] = 0x64f98fa7;
+    stateLo[7] = 0xbefa4fa4;
+}
+
+SHA256::SHA256() {
+    this->reset();
+}
+
+int SHA256::digestLength() {
+    return SHA256_DIGEST_LENGTH; // SHA-256 produces a 256-bit hash value (32 bytes)
+}
+
+int SHA256::blockSize() {
+    return SHA256_BLOCK_SIZE; // SHA-256 processes data in 512-bit blocks (64 bytes)
+}
+
+void SHA256::_initState() {
+    state[0] = 0x6a09e667;
+    state[1] = 0xbb67ae85;
+    state[2] = 0x3c6ef372;
+    state[3] = 0xa54ff53a;
+    state[4] = 0x510e527f;
+    state[5] = 0x9b05688c;
+    state[6] = 0x1f83d9ab;
+    state[7] = 0x5be0cd19;
+}
+
+Hash* SHA256::reset() {
+    _initState();
+    _bufferLength = 0;
+    _bytesHashed = 0;
+    _finished = false;
+    return this;
+}
+
+void SHA256::clean() {
+    cleanBuffer(_buffer);
+    cleanBuffer(_temp);
+    _initState();
+}
+
+Hash* SHA256::update(const uint8_t* data, size_t len) {
+    if (_finished) return this;
+    size_t dataPos = 0;
+    _bytesHashed += len;
+    if (_bufferLength > 0) {
+        while (_bufferLength < SHA256_BLOCK_SIZE && len > 0) {
+            _buffer[_bufferLength++] = data[dataPos++];
+            len--;
+        }
+        if (_bufferLength == SHA256_BLOCK_SIZE) {
+            hashBlocks(_buffer, 0, SHA256_BLOCK_SIZE);
+            _bufferLength = 0;
+        }
+    }
+    if (len >= SHA256_BLOCK_SIZE) {
+        dataPos = hashBlocks(data, dataPos, len);
+        len %= SHA256_BLOCK_SIZE;
+    }
+    while (len > 0) {
+        _buffer[_bufferLength++] = data[dataPos++];
+        len--;
+    }
+    return this;
+}
+
+Hash* SHA256::finish(uint8_t* data, size_t len) {
+    if (!_finished) {
+        size_t bytesHashed = _bytesHashed;
+        size_t left = _bufferLength;
+        uint64_t bitLen = bytesHashed << 3;
+        size_t padLength = (bytesHashed % SHA256_BLOCK_SIZE) < 56 ? 64 : 128;
+        _buffer[left] = 0x80;
+        memset(_buffer + left + 1, 0, padLength - left - 9);
+        cstr_write_uint64(_buffer + padLength - 8, bitLen, 1);
+        hashBlocks(_buffer, 0, padLength);
+        _finished = true;
+    }
+    for (int i = 0; i < this->digestLength() / 4 && i < len / 4; i++) {
+        cstr_write_uint32(data + i * 4, state[i], 1);
+    }
+    return this;
+}
+
+const uint32_t SHA256_K[] = {
+    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b,
+    0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01,
+    0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7,
+    0xc19bf174, 0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc,
+    0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152,
+    0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147,
+    0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc,
+    0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819,
+    0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116, 0x1e376c08,
+    0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f,
+    0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
+    0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+};
+
+size_t SHA256::hashBlocks(const uint8_t* m, size_t pos, size_t len) {
+    while (len >= 64) {
+        uint32_t a = state[0], b = state[1], c = state[2], d = state[3],
+                 e = state[4], f = state[5], g = state[6], h = state[7];
+        for (int i = 0; i < 16; i++) {
+            size_t j = i * 4 + pos;
+            _temp[i] = cstr_read_uint32(m + j, 1);
+        }
+        for (int i = 16; i < 64; i++) {
+            uint32_t u = _temp[i - 2];
+            uint32_t t1 = (u >> 17 | u << (32 - 17)) ^ (u >> 19 | u << (32 - 19)) ^ (u >> 10);
+            u = _temp[i - 15];
+            uint32_t t2 = (u >> 7 | u << (32 - 7)) ^ (u >> 18 | u << (32 - 18)) ^ (u >> 3);
+            _temp[i] = (t1 + _temp[i - 7]) + (t2 + _temp[i - 16]);
+        }
+        for (int i = 0; i < 64; i++) {
+            uint32_t t1 = ((e >> 6 | e << (32 - 6)) ^ (e >> 11 | e << (32 - 11)) ^ (e >> 25 | e << (32 - 25))) + ((e & f) ^ (~e & g)) + h + SHA256_K[i] + _temp[i];
+            uint32_t t2 = ((a >> 2 | a << (32 - 2)) ^ (a >> 13 | a << (32 - 13)) ^ (a >> 22 | a << (32 - 22))) + ((a & b) ^ (a & c) ^ (b & c));
+            h = g;
+            g = f;
+            f = e;
+            e = d + t1;
+            d = c;
+            c = b;
+            b = a;
+            a = t1 + t2;
+        }
+        state[0] += a;
+        state[1] += b;
+        state[2] += c;
+        state[3] += d;
+        state[4] += e;
+        state[5] += f;
+        state[6] += g;
+        state[7] += h;
+        pos += 64;
+        len -= 64;
+    }
+    return pos;
+}
+
+SHA224::SHA224() {
+    this->reset();
+}
+
+int SHA224::digestLength() {
+    return SHA224_DIGEST_LENGTH; // SHA-224 produces a 224-bit hash value (28 bytes)
+}
+
+void SHA224::_initState() {
+    state[0] = 0xc1059ed8;
+    state[1] = 0x367cd507;
+    state[2] = 0x3070dd17;
+    state[3] = 0xf70e5939;
+    state[4] = 0xffc00b31;
+    state[5] = 0x68581511;
+    state[6] = 0x64f98fa7;
+    state[7] = 0xbefa4fa4;
 }
