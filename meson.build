@@ -116,6 +116,7 @@ source_file = files([
     'utils_static.cpp',
     'hash_map.cpp',
     'reg_util.cpp',
+    'hash_lib.cpp',
 ])
 
 source_file_headers = files([
@@ -145,6 +146,7 @@ source_file_headers = files([
     'utils_static.h',
     'hash_map.h',
     'reg_util.h',
+    'hash_lib.h',
 ])
 
 if conf.get('HAVE_STRPTIME') == 0

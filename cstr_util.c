@@ -336,3 +336,41 @@ int cstr_strnicmp(const char* str1, const char* str2, size_t count) {
     return 0;
 #endif
 }
+
+void cstr_write_uint64(uint8_t* bytes, uint64_t value, int big) {
+    if (!bytes) return;
+    if (big) {
+        bytes[0] = (value >> 56) & 0xFF;
+        bytes[1] = (value >> 48) & 0xFF;
+        bytes[2] = (value >> 40) & 0xFF;
+        bytes[3] = (value >> 32) & 0xFF;
+        bytes[4] = (value >> 24) & 0xFF;
+        bytes[5] = (value >> 16) & 0xFF;
+        bytes[6] = (value >> 8) & 0xFF;
+        bytes[7] = value & 0xFF;
+    } else {
+        bytes[7] = (value >> 56) & 0xFF;
+        bytes[6] = (value >> 48) & 0xFF;
+        bytes[5] = (value >> 40) & 0xFF;
+        bytes[4] = (value >> 32) & 0xFF;
+        bytes[3] = (value >> 24) & 0xFF;
+        bytes[2] = (value >> 16) & 0xFF;
+        bytes[1] = (value >> 8) & 0xFF;
+        bytes[0] = value & 0xFF;
+    }
+}
+
+void cstr_write_uint32(uint8_t* bytes, uint32_t value, int big) {
+    if (!bytes) return;
+    if (big) {
+        bytes[0] = (value >> 24) & 0xFF;
+        bytes[1] = (value >> 16) & 0xFF;
+        bytes[2] = (value >> 8) & 0xFF;
+        bytes[3] = value & 0xFF;
+    } else {
+        bytes[3] = (value >> 24) & 0xFF;
+        bytes[2] = (value >> 16) & 0xFF;
+        bytes[1] = (value >> 8) & 0xFF;
+        bytes[0] = value & 0xFF;
+    }
+}

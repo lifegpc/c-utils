@@ -123,6 +123,20 @@ int cstr_stricmp(const char* str1, const char* str2);
 */
 int cstr_strnicmp(const char* str1, const char* str2, size_t count);
 #define cstr_strncasecmp cstr_strnicmp
+/**
+ * @brief Convert uint64 to bytes
+ * @param bytes Bytes (at least 8 bytes)
+ * @param value Value
+ * @param big 0 if little endian otherwise big endian
+*/
+void cstr_write_uint64(uint8_t* bytes, uint64_t value, int big);
+/**
+ * @brief Convert uint32 to bytes
+ * @param bytes Bytes (at least 4 bytes)
+ * @param value Value
+ * @param big 0 if little endian otherwise big endian
+*/
+void cstr_write_uint32(uint8_t* bytes, uint32_t value, int big);
 #ifdef __cplusplus
 }
 #endif

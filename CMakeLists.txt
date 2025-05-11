@@ -126,6 +126,7 @@ set(SOURCE_FILE
     utils_static.cpp
     hash_map.cpp
     reg_util.cpp
+    hash_lib.cpp
 )
 set(SOURCE_FILE_HEADERS
     cfileop.h
@@ -154,6 +155,7 @@ set(SOURCE_FILE_HEADERS
     utils_static.h
     hash_map.h
     reg_util.h
+    hash_lib.h
 )
 
 if (NOT HAVE_STRPTIME)
@@ -204,7 +206,7 @@ if (ENABLE_UTILS_TESTING)
     add_subdirectory(googletest)
     enable_testing()
     add_executable(unittest test/stack_test.cpp test/queue_test.cpp test/binary_tree_test.cpp
-    test/hash_map_test.cpp)
+    test/hash_map_test.cpp test/hash_lib_test.cpp)
     target_link_libraries(unittest GTest::gtest_main utils)
     include(GoogleTest)
     gtest_discover_tests(unittest)
