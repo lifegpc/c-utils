@@ -42,3 +42,9 @@ TEST(HashLibTest, SHA224Test) {
     GTEST_ASSERT_EQ(hashHex<SHA224>("Hello, World!"), "72a23dfa411ba6fde01dbfabf3b00a709c93ebf273dc29e2d8b261ff");
     GTEST_ASSERT_EQ(hashHex<SHA224>("随便来一些中文。测试超过一百二十八字节时的状况。用于测试是否存在问题。还是不够长呢。啊啊啊。"), "6dc50e486071b01bf45d5d228207e9c0a8254e1cc48c88b989f8527d");
 }
+
+TEST(HashLibTest, SHA1Test) {
+    GTEST_ASSERT_EQ(hashHex<SHA1>(""), "da39a3ee5e6b4b0d3255bfef95601890afd80709");
+    GTEST_ASSERT_EQ(hashHex<SHA1>("Hello, World!"), "0a0a9f2a6772942557ab5355d76af442f8f65e01");
+    GTEST_ASSERT_EQ(hashHex<SHA1>("随便来一些中文。测试超过一百二十八字节时的状况。用于测试是否存在问题。还是不够长呢。啊啊啊。"), "21c05e3532d593ec382b8e361d43a17e8fb8774a");
+}

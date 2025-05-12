@@ -104,6 +104,28 @@ namespace hash_lib {
     protected:
         void _initState() override;
     };
+    class SHA1: public Hash {
+    public:
+        SHA1();
+        virtual int digestLength() override;
+        int blockSize() override;
+        Hash* update(const uint8_t* data, size_t len) override;
+        using Hash::update;
+        Hash* reset() override;
+        Hash* finish(uint8_t* data, size_t len) override;
+        using Hash::finish;
+        void clean() override;
+    protected:
+        uint32_t state[5];
+        virtual void _initState();
+    private:
+        uint32_t _temp[80];
+        uint8_t _buffer[128];
+        size_t _bufferLength = 0;
+        size_t _bytesHashed = 0;
+        bool _finished = false;
+        size_t hashBlocks(const uint8_t* m, size_t pos, size_t len);
+    };
     template<class H>
     std::vector<uint8_t> hash(const uint8_t* data, size_t len) {
         H h;

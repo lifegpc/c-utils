@@ -9,6 +9,8 @@
 #define SHA256_DIGEST_LENGTH 32
 #define SHA256_BLOCK_SIZE 64
 #define SHA224_DIGEST_LENGTH 28
+#define SHA1_DIGEST_LENGTH 20
+#define SHA1_BLOCK_SIZE 64
 
 using namespace hash_lib;
 
@@ -84,7 +86,7 @@ void SHA512::clean() {
     cleanBuffer(_buffer);
     cleanBuffer(_tempHi);
     cleanBuffer(_tempLo);
-    _initState();
+    reset();
 }
 
 void SHA512::_initState() {
@@ -477,7 +479,7 @@ Hash* SHA256::reset() {
 void SHA256::clean() {
     cleanBuffer(_buffer);
     cleanBuffer(_temp);
-    _initState();
+    reset();
 }
 
 Hash* SHA256::update(const uint8_t* data, size_t len) {
@@ -597,4 +599,125 @@ void SHA224::_initState() {
     state[5] = 0x68581511;
     state[6] = 0x64f98fa7;
     state[7] = 0xbefa4fa4;
+}
+
+SHA1::SHA1() {
+    this->reset();
+}
+
+int SHA1::digestLength() {
+    return SHA1_DIGEST_LENGTH; // SHA-1 produces a 160-bit hash value (20 bytes)
+}
+
+int SHA1::blockSize() {
+    return SHA1_BLOCK_SIZE; // SHA-1 processes data in 512-bit blocks (64 bytes)
+}
+
+void SHA1::_initState() {
+    state[0] = 0x67452301;
+    state[1] = 0xEFCDAB89;
+    state[2] = 0x98BADCFE;
+    state[3] = 0x10325476;
+    state[4] = 0xC3D2E1F0;
+}
+
+Hash* SHA1::reset() {
+    _initState();
+    _bufferLength = 0;
+    _bytesHashed = 0;
+    _finished = false;
+    return this;
+}
+
+void SHA1::clean() {
+    cleanBuffer(_buffer);
+    cleanBuffer(_temp);
+    reset();
+}
+
+Hash* SHA1::update(const uint8_t* data, size_t len) {
+    if (_finished) return this;
+    size_t dataPos = 0;
+    _bytesHashed += len;
+    if (_bufferLength > 0) {
+        while (_bufferLength < SHA1_BLOCK_SIZE && len > 0) {
+            _buffer[_bufferLength++] = data[dataPos++];
+            len--;
+        }
+        if (_bufferLength == SHA1_BLOCK_SIZE) {
+            hashBlocks(_buffer, 0, SHA1_BLOCK_SIZE);
+            _bufferLength = 0;
+        }
+    }
+    if (len >= SHA1_BLOCK_SIZE) {
+        dataPos = hashBlocks(data, dataPos, len);
+        len %= SHA1_BLOCK_SIZE;
+    }
+    while (len > 0) {
+        _buffer[_bufferLength++] = data[dataPos++];
+        len--;
+    }
+    return this;
+}
+
+Hash* SHA1::finish(uint8_t* data, size_t len) {
+    if (!_finished) {
+        size_t bytesHashed = _bytesHashed;
+        size_t left = _bufferLength;
+        uint64_t bitLen = bytesHashed << 3;
+        size_t padLength = (bytesHashed % SHA1_BLOCK_SIZE) < 56 ? 64 : 128;
+        _buffer[left] = 0x80;
+        memset(_buffer + left + 1, 0, padLength - left - 9);
+        cstr_write_uint64(_buffer + padLength - 8, bitLen, 1);
+        hashBlocks(_buffer, 0, padLength);
+        _finished = true;
+    }
+    for (int i = 0; i < this->digestLength() / 4 && i < len / 4; i++) {
+        cstr_write_uint32(data + i * 4, state[i], 1);
+    }
+    return this;
+}
+
+size_t SHA1::hashBlocks(const uint8_t* m, size_t pos, size_t len) {
+    while (len >= 64) {
+        for (int i = 0; i < 16; i++) {
+            size_t j = i * 4 + pos;
+            _temp[i] = cstr_read_uint32(m + j, 1);
+        }
+        for (int i = 16; i < 80; i++) {
+            uint32_t u = _temp[i - 3] ^ _temp[i - 8] ^ _temp[i - 14] ^ _temp[i - 16];
+            _temp[i] = (u << 1) | (u >> (32 - 1));
+        }
+        uint32_t a = state[0], b = state[1], c = state[2], d = state[3], e = state[4];
+        for (int i = 0; i < 80; i++) {
+            uint32_t f, k;
+            if (i < 20) {
+                f = (b & c) | (~b & d);
+                k = 0x5A827999;
+            } else if (i < 40) {
+                f = b ^ c ^ d;
+                k = 0x6ED9EBA1;
+            } else if (i < 60) {
+                f = (b & c) | (b & d) | (c & d);
+                k = 0x8F1BBCDC;
+            } else {
+                f = b ^ c ^ d;
+                k = 0xCA62C1D6;
+            }
+            uint32_t temp = ((a << 5) | (a >> (32 - 5))) + f + e + k + _temp[i];
+            e = d;
+            d = c;
+            c = ((b << 30) | (b >> (32 - 30)));
+            b = a;
+            a = temp;
+        }
+        state[0] += a;
+        state[1] += b;
+        state[2] += c;
+        state[3] += d;
+        state[4] += e;
+        pos += 64;
+        len -= 64;
+    }
+    return pos;
 }
