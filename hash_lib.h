@@ -127,6 +127,70 @@ namespace hash_lib {
         size_t hashBlocks(const uint8_t* m, size_t pos, size_t len);
     };
     template<class H>
+    class HMAC: public Hash {
+    public:
+        HMAC(const uint8_t* key, size_t len) {
+            int blockSize = _outer.blockSize();
+            std::vector<uint8_t> pad(blockSize);
+            if (len > blockSize) {
+                _inner.update(key, len)->finish(pad)->clean();
+            } else {
+                memcpy(pad.data(), key, len);
+            }
+            _pad = std::move(pad);
+            reset();
+        }
+        HMAC(const std::string& key) : HMAC((const uint8_t*)key.c_str(), key.size()) {}
+        HMAC(const std::vector<uint8_t>& key) : HMAC(key.data(), key.size()) {}
+        template <size_t T>
+        HMAC(const uint8_t (&key)[T]) : HMAC(key, T) {}
+        Hash* reset() override {
+            _inner.clean();
+            _outer.clean();
+            int blockSize = _outer.blockSize();
+            auto pad(_pad);
+            for (int i = 0; i < blockSize; i++) {
+                pad[i] ^= 0x36;
+            }
+            _inner.update(pad);
+            for (int i = 0; i < blockSize; i++) {
+                pad[i] ^= 0x36 ^ 0x5c;
+            }
+            _outer.update(pad);
+            _finished = false;
+            return this;
+        }
+        int digestLength() override {
+            return _outer.digestLength();
+        }
+        int blockSize() override {
+            return _outer.blockSize();
+        }
+        Hash* update(const uint8_t* data, size_t len) override {
+            _inner.update(data, len);
+            return this;
+        }
+        using Hash::update;
+        Hash* finish(uint8_t* data, size_t len) override {
+            if (_finished) {
+                _outer.finish(data, len);
+                return this;
+            }
+            _outer.update(_inner.digest())->finish(data, len);
+            _finished = true;
+            return this;
+        }
+        using Hash::finish;
+        void clean() override {
+            reset();
+        }
+    private:
+        H _inner;
+        H _outer;
+        std::vector<uint8_t> _pad;
+        bool _finished = false; 
+    };
+    template<class H>
     std::vector<uint8_t> hash(const uint8_t* data, size_t len) {
         H h;
         h.update(data, len);

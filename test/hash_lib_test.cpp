@@ -48,3 +48,12 @@ TEST(HashLibTest, SHA1Test) {
     GTEST_ASSERT_EQ(hashHex<SHA1>("Hello, World!"), "0a0a9f2a6772942557ab5355d76af442f8f65e01");
     GTEST_ASSERT_EQ(hashHex<SHA1>("随便来一些中文。测试超过一百二十八字节时的状况。用于测试是否存在问题。还是不够长呢。啊啊啊。"), "21c05e3532d593ec382b8e361d43a17e8fb8774a");
 }
+
+TEST(HashLibTest, HMACClassTest) {
+    HMAC<SHA512> hmac("key");
+    hmac.update("Hello, World!");
+    GTEST_ASSERT_EQ(hmac.hexDigest(), "7b735ac190ebd1432d56f95ae2aea5a04a23128f4c228e299b7a49fb7561de8cc8f4fdf4486dc743dfd07827d617273aab42b3bf819d243ded322fac167419f1");
+    hmac.clean();
+    hmac.update("Hello, World!");
+    GTEST_ASSERT_EQ(hmac.hexDigest(), "7b735ac190ebd1432d56f95ae2aea5a04a23128f4c228e299b7a49fb7561de8cc8f4fdf4486dc743dfd07827d617273aab42b3bf819d243ded322fac167419f1");
+}
