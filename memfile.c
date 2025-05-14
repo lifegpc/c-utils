@@ -65,6 +65,23 @@ size_t cmemfile_read(CMemFile* f, size_t buf_len, char* buf) {
     return le;
 }
 
+int memfile_seek(MemFile* f, int64_t offset, int origin) {
+    if (!f) return 1;
+    int64_t npos = 0;
+    if (origin == SEEK_SET) {
+        npos = offset;
+    } else if (origin == SEEK_CUR) {
+        npos = f->loc + offset;
+    } else if (origin == SEEK_END) {
+        npos = f->len + offset;
+    } else {
+        return 1;
+    }
+    if (npos < 0 || npos > f->len) return 1;
+    f->loc = npos;
+    return 0;
+}
+
 int cmemfile_seek(CMemFile* f, int64_t offset, int origin) {
     if (!f) return 1;
     int64_t npos = 0;
@@ -83,6 +100,11 @@ int cmemfile_seek(CMemFile* f, int64_t offset, int origin) {
 }
 
 int64_t cmemfile_tell(CMemFile* f) {
+    if (!f) return -1;
+    return f->loc;
+}
+
+int64_t memfile_tell(MemFile* f) {
     if (!f) return -1;
     return f->loc;
 }
