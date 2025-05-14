@@ -35,7 +35,10 @@ char* time_util::strptime(const char* s, const char* format, struct tm* tm) {
 }
 
 long time_util::get_timezone() {
-#if HAVE__GET_TIMEZONE
+#if HAVE_TIMEZONE && HAVE_TZSET
+    tzset();
+    return timezone;
+#elif HAVE__GET_TIMEZONE
     long t = 0;
     int err = _get_timezone(&t);
     if (!err) {
@@ -48,9 +51,6 @@ long time_util::get_timezone() {
     } else {
         return t;
     }
-#elif HAVE_TIMEZONE && HAVE_TZSET
-    tzset();
-    return timezone;
 #else
     printf("get_timezone failed: not implemented\n");
     return 0;

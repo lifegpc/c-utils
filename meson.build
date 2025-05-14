@@ -49,8 +49,8 @@ endif
 
 
 if MSVC
-    add_project_arguments('/UTF8', language: 'c')
-    add_project_arguments('/UTF8', language: 'cpp')
+    add_project_arguments('/utf-8', language: 'c')
+    add_project_arguments('/utf-8', language: 'cpp')
 endif
 
 if WIN32
@@ -94,6 +94,16 @@ if conf.get('HAVE_STRERROR_R') == 1
     HAVE_GNU_STRERROR_R = cc.run(files('test_strerror_r.c')).compiled()
     conf.set10('HAVE_GNU_STRERROR_R', HAVE_GNU_STRERROR_R)
     message('strerror_r is GNU complatable:', HAVE_GNU_STRERROR_R)
+endif
+if not MSVC
+    conf.set10('HAVE_TIMEZONE', cc.has_header_symbol('time.h', 'timezone'))
+    conf.set10('HAVE_TZSET', cc.has_header_symbol('time.h', 'tzset'))
+endif
+if not WIN32
+    conf.set10('HAVE_CLOCK_GETTIME', cc.has_header_symbol('time.h', 'clock_gettime'))
+    conf.set10('HAVE_USLEEP', cc.has_header_symbol('unistd.h', 'usleep'))
+    conf.set10('HAVE_NANOSLEEP', cc.has_header_symbol('time.h', 'nanosleep'))
+    conf.set10('HAVE_NETINET_IN_H', cc.check_header('netinet/in.h'))
 endif
 configure_file(output: 'utils_config.h', configuration: conf)
 
