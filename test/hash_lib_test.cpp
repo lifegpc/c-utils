@@ -6,11 +6,16 @@ using namespace hash_lib;
 TEST(HashLibTest, SHA512ClassTest) {
     SHA512 sha512;
     sha512.update("Hello, World!");
+    SHA512 another(sha512);
     GTEST_ASSERT_EQ(sha512.hexDigest(), "374d794a95cdcfd8b35993185fef9ba368f160d8daf432d08ba9f1ed1e5abe6cc69291e0fa2fe0006a52570ef18c19def4e617c33ce52ef0a6e5fbe318cb0387");
     auto re = hash<SHA512>("Hello, World!");
     GTEST_ASSERT_EQ(re, sha512.digest());
     auto hexRe = hashHex<SHA512>("Hello, World!");
     GTEST_ASSERT_EQ(hexRe, sha512.hexDigest());
+    another.update("Hello, World!");
+    GTEST_ASSERT_EQ(hashHex<SHA512>("Hello, World!Hello, World!"), another.hexDigest());
+    sha512.update("Hello, World!");
+    GTEST_ASSERT_EQ(hashHex<SHA512>("Hello, World!"), sha512.hexDigest());
 }
 
 TEST(HashLibTest, SHA512Test) {
@@ -49,6 +54,12 @@ TEST(HashLibTest, SHA1Test) {
     GTEST_ASSERT_EQ(hashHex<SHA1>("随便来一些中文。测试超过一百二十八字节时的状况。用于测试是否存在问题。还是不够长呢。啊啊啊。"), "21c05e3532d593ec382b8e361d43a17e8fb8774a");
 }
 
+TEST(HashLibTest, MD5Test) {
+    GTEST_ASSERT_EQ(hashHex<MD5>(""), "d41d8cd98f00b204e9800998ecf8427e");
+    GTEST_ASSERT_EQ(hashHex<MD5>("Hello, World!"), "65a8e27d8879283831b664bd8b7f0ad4");
+    GTEST_ASSERT_EQ(hashHex<MD5>("随便来一些中文。测试超过一百二十八字节时的状况。用于测试是否存在问题。还是不够长呢。啊啊啊。"), "bbf4521fa0a37519d277660cb10805d1");
+}
+
 TEST(HashLibTest, HMACClassTest) {
     HMAC<SHA512> hmac("key");
     hmac.update("Hello, World!");
@@ -56,4 +67,10 @@ TEST(HashLibTest, HMACClassTest) {
     hmac.clean();
     hmac.update("Hello, World!");
     GTEST_ASSERT_EQ(hmac.hexDigest(), "7b735ac190ebd1432d56f95ae2aea5a04a23128f4c228e299b7a49fb7561de8cc8f4fdf4486dc743dfd07827d617273aab42b3bf819d243ded322fac167419f1");
+}
+
+TEST(HashLibTest, HMACTest) {
+    GTEST_ASSERT_EQ(hashHex<HMAC<SHA512>>("123", "abc"), "1bb47a2e086bfab3a86e3843ffd665fead90f0ef46cf2894c56a194fb18158685e9fd364bde008d5f2cb04e649c7396adda38dc5617a9dd56ab981920ae13188");
+    GTEST_ASSERT_EQ(hashHex<HMAC<SHA1>>("1dakljda", "abc"), "f1d5dadc84af9f826601f1d6682c1a5cf1a60751");
+    GTEST_ASSERT_EQ(hashHex<HMAC<SHA1>>("随便来一些中文。测试超过一百二十八字节时的状况。用于测试是否存在问题。还是不够长呢。啊啊啊。", "abc"), "7baac227c3f24787e906d9b8e11283945f5d38b3");
 }
