@@ -12,6 +12,7 @@ TEST(HashLibTest, SHA512ClassTest) {
     GTEST_ASSERT_EQ(re, sha512.digest());
     auto hexRe = hashHex<SHA512>("Hello, World!");
     GTEST_ASSERT_EQ(hexRe, sha512.hexDigest());
+    GTEST_ASSERT_EQ(hashHex<SHA512>("Hello, World!Hello, World!"), hashHex<SHA512>("Hello, World!", another));
     another.update("Hello, World!");
     GTEST_ASSERT_EQ(hashHex<SHA512>("Hello, World!Hello, World!"), another.hexDigest());
     sha512.update("Hello, World!");

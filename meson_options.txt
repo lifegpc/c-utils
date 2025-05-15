@@ -2,3 +2,4 @@ option('utils_iconv', type: 'feature', value: 'auto', description: 'Enable iconv
 option('utils_standalone', type: 'boolean', value: false, description: 'Build standalone utils')
 option('utils_ssl', type: 'feature', value: 'disabled', description: 'Enable SSL support')
 option('utils_zlib', type: 'feature', value: 'disabled', description: 'Enable zlib support for uncompress http data.')
+option('test', type: 'boolean', value: false, description: 'Enable test')

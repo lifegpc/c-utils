@@ -1,4 +1,4 @@
-project('utils')
+project('utils', default_options: ['cpp_std=c++17'])
 add_languages('c', 'cpp', required: true)
 
 cc = meson.get_compiler('c')
@@ -180,4 +180,20 @@ utils_dep = declare_dependency(include_directories: include_directories('.'), li
 
 if get_option('utils_standalone')
     install_headers(source_file_headers)
+endif
+
+if get_option('test')
+    gtest = subproject('gtest')
+    gtest_main_dep = gtest.get_variable('gtest_main_dep')
+    test_exe = executable('unittest', 
+        files(
+            'test/stack_test.cpp',
+            'test/queue_test.cpp',
+            'test/binary_tree_test.cpp',
+            'test/hash_map_test.cpp',
+            'test/hash_lib_test.cpp',
+        ),
+        dependencies: [utils_dep, gtest_main_dep],
+    )
+    test('unittest', test_exe, args: ['-v'], timeout: 60)
 endif
