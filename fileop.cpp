@@ -294,6 +294,18 @@ std::string fileop::join(std::string path, std::string path2) {
 #endif
 }
 
+std::string fileop::join(std::initializer_list<std::string> paths) {
+    std::string path;
+    for (auto it = paths.begin(); it != paths.end(); it++) {
+        if (it == paths.begin()) {
+            path = *it;
+        } else {
+            path = join(path, *it);
+        }
+    }
+    return path;
+}
+
 bool fileop::isdir(std::string path, bool& result) {
     if (!exists(path)) {
         result = false;

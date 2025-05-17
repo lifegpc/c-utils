@@ -70,6 +70,22 @@ namespace fileop {
     */
     std::string join(std::string path, std::string path2);
     /**
+     * @brief Join multiple pathname components
+     * @param paths List of pathname components
+     * @return Joined path string
+    */
+    std::string join(std::initializer_list<std::string> paths);
+    /**
+     * @brief Join multiple pathname components (variadic template version)
+     * @tparam Args Additional pathname component types
+     * @param paths All pathname components
+     * @return Joined path string
+    */
+    template<typename... Args>
+    std::string join(Args... paths) {
+        return join({std::forward<Args>(paths)...});
+    }
+    /**
      * @brief check if path is an existing directory.
      * @param path Path
      * @param result true if path is an existing directory.
