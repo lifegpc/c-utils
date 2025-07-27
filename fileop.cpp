@@ -1,4 +1,4 @@
-﻿#if HAVE_UTILS_CONFIG_H
+#if HAVE_UTILS_CONFIG_H
 #include "utils_config.h"
 #endif
 

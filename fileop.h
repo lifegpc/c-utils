@@ -1,4 +1,4 @@
-﻿#ifndef _UTIL_FILEOP_H
+#ifndef _UTIL_FILEOP_H
 #define _UTIL_FILEOP_H
 #include <list>
 #include <string>
