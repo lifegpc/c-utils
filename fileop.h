@@ -1,4 +1,4 @@
-#ifndef _UTIL_FILEOP_H
+﻿#ifndef _UTIL_FILEOP_H
 #define _UTIL_FILEOP_H
 #include <list>
 #include <string>
@@ -199,5 +199,11 @@ namespace fileop {
      */
     std::string relpath(std::string path, std::string start = "");
     FILE* fopen(std::string path, std::string mode);
+    /**
+     * @brief Get file extension name
+     * @param path Path
+     * @return File extension name. If no extension, will return empty string.
+    */
+    std::string extname(std::string path);
 }
 #endif

@@ -1,4 +1,4 @@
-#if HAVE_UTILS_CONFIG_H
+﻿#if HAVE_UTILS_CONFIG_H
 #include "utils_config.h"
 #endif
 
@@ -699,4 +699,12 @@ FILE* fileop::fopen(std::string path, std::string mode) {
 #else
     return ::fopen(path.c_str(), mode.c_str());
 #endif
+}
+
+std::string fileop::extname(std::string path) {
+    auto loc = path.find_last_of('.');
+    if (loc == std::string::npos) {
+        return "";
+    }
+    return path.substr(loc + 1, path.length() - loc - 1);
 }
