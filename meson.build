@@ -157,6 +157,7 @@ source_file_headers = files([
     'hash_map.h',
     'reg_util.h',
     'hash_lib.h',
+    'stream.h',
 ])
 
 if conf.get('HAVE_STRPTIME') == 0

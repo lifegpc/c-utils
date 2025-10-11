@@ -155,6 +155,7 @@ set(SOURCE_FILE_HEADERS
     hash_map.h
     reg_util.h
     hash_lib.h
+    stream.h
 )
 
 if (NOT HAVE_STRPTIME)
