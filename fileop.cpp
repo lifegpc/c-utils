@@ -24,6 +24,7 @@
 #include "time_util.h"
 #include <regex>
 #include <list>
+#include <malloc.h>
 
 #ifdef _WIN32
 #if HAVE__ACCESS_S
@@ -112,6 +113,16 @@ bool listdir_internal(wchar_t* fn, std::list<std::string>& list, bool ignore_hid
     } while (1);
     list = li;
     return true;
+}
+
+std::string realpath_internal(wchar_t* fn) {
+    DWORD len = GetFullPathNameW(fn, 0, nullptr, nullptr);
+    wchar_t* buf = (wchar_t*)malloc(sizeof(wchar_t) * len);
+    GetFullPathNameW(fn, len, buf, nullptr);
+    std::string re;
+    wchar_util::wstr_to_str(re, buf, CP_UTF8);
+    free(buf);
+    return re;
 }
 
 template <typename T, typename ... Args>
@@ -707,4 +718,28 @@ std::string fileop::extname(std::string path) {
         return "";
     }
     return path.substr(loc + 1, path.length() - loc - 1);
+}
+
+std::string fileop::abspath(std::string path) {
+#if _WIN32
+    UINT cp[] = { CP_UTF8, CP_OEMCP, CP_ACP };
+    int i;
+    std::string re;
+    for (i = 0; i < 3; i++) {
+        re = fileop_internal<std::string>(path.c_str(), cp[i], &realpath_internal, "");
+        if (!re.empty()) return re;
+    }
+    DWORD len = GetFullPathNameA(path.c_str(), 0, nullptr, nullptr);
+    char* buf = (char*)malloc(sizeof(char) * len);
+    GetFullPathNameA(path.c_str(), len, buf, nullptr);
+    auto re2 = std::string(buf);
+    free(buf);
+    return re2;
+#else
+    char* rp = realpath(path.c_str(), nullptr);
+    if (!rp) return path;
+    std::string re(rp);
+    free(rp);
+    return re;
+#endif
 }

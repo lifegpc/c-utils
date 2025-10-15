@@ -205,5 +205,11 @@ namespace fileop {
      * @return File extension name. If no extension, will return empty string.
     */
     std::string extname(std::string path);
+    /**
+     * @brief Convert a relative path to an absolute path
+     * @param path Path
+     * @return Absolute path
+    */
+    std::string abspath(std::string path);
 }
 #endif
