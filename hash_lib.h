@@ -5,6 +5,7 @@
 #ifdef __cplusplus
 #include <string>
 #include <vector>
+#include <string.h>
 #include "fileop.h"
 namespace hash_lib {
     class Hash {
