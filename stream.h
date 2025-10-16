@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include "fileop.h"
 #include <vector>
+#include <string.h>
 #include "cstr_util.h"
 
 class ReadStream {
