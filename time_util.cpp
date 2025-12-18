@@ -73,13 +73,28 @@ size_t time_util::time_ns() {
     FILETIME ft;
     GetSystemTimeAsFileTime(&ft);
     size_t t = ((size_t)ft.dwHighDateTime << 32) | (size_t)ft.dwLowDateTime;
-    return t;
+    return t * 100;
 #elif HAVE_CLOCK_GETTIME
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
     return ts.tv_sec * 1000000000LL + ts.tv_nsec;
 #else
     return time(NULL) * 1000000000LL;
+#endif
+}
+
+int64_t time_util::time_ns64() {
+#if _WIN32
+    FILETIME ft;
+    GetSystemTimeAsFileTime(&ft);
+    int64_t t = ((int64_t)ft.dwHighDateTime << 32) | (int64_t)ft.dwLowDateTime;
+    return t * 100;
+#elif HAVE_CLOCK_GETTIME
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    return ts.tv_sec * 1000000000LL + ts.tv_nsec;
+#else
+    return (int64_t)time(NULL) * 1000000000LL;
 #endif
 }
 
