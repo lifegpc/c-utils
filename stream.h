@@ -6,6 +6,18 @@
 #include <vector>
 #include <string.h>
 #include "cstr_util.h"
+#if _WIN32
+#include <fcntl.h>
+#ifndef _SH_DENYWR
+#define _SH_DENYWR 0x20
+#endif
+#ifndef _O_BINARY
+#define _O_BINARY 0x8000
+#endif
+#ifndef _O_RDONLY
+#define _O_RDONLY 0x0000
+#endif
+#endif
 
 class ReadStream {
 public:
@@ -93,10 +105,24 @@ public:
      * @param filename File name (on Windows, UTF-8 encoding is supported)
     */
     FileReadStream(const char* filename) {
+#if _WIN32
+        int fd = 0;
+        int re = fileop::open(filename, fd, _O_RDONLY | _O_BINARY, _SH_DENYWR);
+        if (re != 0) {
+            errored = true;
+            return;
+        }
+        fp = fileop::fdopen(fd, "rb");
+        if (!fp) {
+            errored = true;
+            fileop::close(fd);
+        }
+#else
         fp = fileop::fopen(filename, "rb");
         if (!fp) {
             errored = true;
         }
+#endif
     }
     virtual size_t read(uint8_t* buf, size_t size) {
         if (!fp) return 0;
