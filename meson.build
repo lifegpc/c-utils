@@ -38,9 +38,14 @@ endif
 
 WIN32 = host_machine.system() in ['windows', 'cygwin']
 MSVC = cc.get_id() == 'msvc'
+CLANG = cc.get_id() == 'clang'
 
 if not MSVC
-    deps += cc.find_library('m')
+    if CLANG
+        deps += cc.find_library('m', required: false)
+    else
+        deps += cc.find_library('m')
+    endif
 endif
 
 if WIN32

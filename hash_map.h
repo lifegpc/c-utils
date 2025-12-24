@@ -4,6 +4,7 @@
 #include <random>
 #include <stdint.h>
 #include <string.h>
+#include <malloc.h>
 #include "utils_static.h"
 
 template <typename K, typename V>
@@ -55,9 +56,9 @@ struct hash_map<K, V>* hash_map_new(
     uint8_t loadfactor = 60,
     H hash = H(),
     std::function<size_t(size_t)> probing = std::function<size_t(size_t)>(hash_map_quadratic_probing_alter),
-    std::function<void*(size_t)> malloc = std::function<void*(size_t)>(malloc),
-    std::function<void*(void *, size_t)> realloc = std::function<void*(void *, size_t)>(realloc),
-    std::function<void(void *)> free = std::function<void(void *)>(free),
+    std::function<void*(size_t)> malloc = std::function<void*(size_t)>(::malloc),
+    std::function<void*(void *, size_t)> realloc = std::function<void*(void *, size_t)>(::realloc),
+    std::function<void(void *)> free = std::function<void(void *)>(::free),
     std::function<void(K)> free_key = std::function<void(K)>(),
     std::function<void(V)> free_value = std::function<void(V)>()
 ) {
