@@ -6,6 +6,7 @@
 #include <vector>
 #include <string.h>
 #include "cstr_util.h"
+#include <mutex>
 #if _WIN32
 #include <fcntl.h>
 #ifndef _SH_DENYWR
@@ -33,6 +34,15 @@ public:
     virtual bool eof() = 0;
     virtual bool error() = 0;
     virtual bool close() = 0;
+
+    // Read at absolute offset. Default implementation seeks, reads and returns.
+    // Offset is absolute in the underlying stream coordinate.
+    virtual size_t read_at(uint8_t* buf, size_t size, int64_t offset) {
+        if (!seekable()) return 0;
+        if (!seek(offset, SEEK_SET)) return 0;
+        return read(buf, size);
+    }
+
     bool readall(const uint8_t* buf, size_t size) {
         size_t total_readed = 0;
         while (total_readed < size) {
@@ -159,9 +169,26 @@ public:
         fp = nullptr;
         return res;
     }
+
+    // Read at absolute offset without modifying stream position for other users.
+    virtual size_t read_at(uint8_t* buf, size_t size, int64_t offset) override {
+        if (!fp) return 0;
+        std::lock_guard<std::mutex> guard(io_mutex);
+        if (fileop::fseek(fp, offset, SEEK_SET) != 0) {
+            errored = true;
+            return 0;
+        }
+        size_t readed = fread(buf, 1, size, fp);
+        if (readed != size && ferror(fp)) {
+            errored = true;
+        }
+        return readed;
+    }
+
 private:
     FILE* fp = nullptr;
     bool errored = false;
+    std::mutex io_mutex;
 };
 
 class MemReadStream : public ReadStream {
@@ -179,6 +206,17 @@ public:
         memcpy(buf, data.data() + pos, to_read);
         pos += to_read;
         
+        return to_read;
+    }
+
+    // Read at absolute offset within the memory buffer.
+    virtual size_t read_at(uint8_t* buf, size_t size, int64_t offset) override {
+        if (offset < 0) return 0;
+        size_t uoffset = (size_t)offset;
+        if (uoffset >= data.size()) return 0;
+        size_t remaining = data.size() - uoffset;
+        size_t to_read = remaining < size ? remaining : size;
+        memcpy(buf, data.data() + uoffset, to_read);
         return to_read;
     }
 
@@ -249,20 +287,28 @@ public:
 
         size_t to_read = (size_t)remaining < size ? (size_t)remaining : size;
 
-        // Seek 到当前应该读取的位置
-        if (!source->seek(start_pos + current_pos, SEEK_SET)) {
-            errored = true;
-            return 0;
-        }
-
-        // 从源流读取数据
-        size_t readed = source->read(buf, to_read);
+        // Use read_at on the source to avoid modifying its global position.
+        size_t readed = source->read_at(buf, to_read, start_pos + current_pos);
         current_pos += readed;
 
         if (source->error()) {
             errored = true;
         }
 
+        return readed;
+    }
+
+    // Attempt to read at absolute offset relative to this region by delegating to source->read_at.
+    virtual size_t read_at(uint8_t* buf, size_t size, int64_t offset) override {
+        if (errored || !source) return 0;
+        if (offset < 0) return 0;
+        int64_t rel = offset;
+        if (rel < 0 || rel >= (end_pos - start_pos)) return 0;
+        int64_t remaining = end_pos - start_pos - rel;
+        if (remaining <= 0) return 0;
+        size_t to_read = (size_t)remaining < size ? (size_t)remaining : size;
+        size_t readed = source->read_at(buf, to_read, start_pos + rel);
+        if (source->error()) errored = true;
         return readed;
     }
 
