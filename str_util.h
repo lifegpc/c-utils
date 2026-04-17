@@ -61,6 +61,13 @@ namespace str_util {
     */
     bool str_endswith(std::string input, std::string pattern);
     /**
+     * @brief Check if a string starts with a pattern
+     * @param input Input data
+     * @param pattern Pattern
+     * @return true if input starts with pattern
+    */
+    bool str_startswith(std::string input, std::string pattern);
+    /**
      * @brief Trim a string
      * @param input Input string
      * @return Result

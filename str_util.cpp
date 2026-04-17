@@ -101,6 +101,14 @@ bool str_util::str_endswith(std::string input, std::string pattern) {
     return i == ilen - plen; 
 }
 
+bool str_util::str_startswith(std::string input, std::string pattern) {
+    auto ilen = input.length();
+    auto plen = pattern.length();
+    if (ilen < plen) return false;
+    auto i = input.find(pattern);
+    return i == 0;
+}
+
 std::string str_util::remove_quote(std::string input) {
     if (input.length() < 2) return input;
     if (input[0] == '"' && input[input.length() - 1] == '"') {
